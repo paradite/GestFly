@@ -1,16 +1,21 @@
 // The main logic for your project goes in this file.
 
-var PLANE_MOVE_SPEED = 500;
+var PLANE_MOVE_SPEED = 0;
+var DEFAULT_SPEED = 300;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
 var UNIT = 30;
 var showZoomLevel = true;
+var lastZoom = App.physicsTimeElapsed;
+var numScrollEvents=0;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
 var player;
+var inProcess=false;
 
+var takeoff = false;
 /**
  * Control codes
  * Yiyang
@@ -31,9 +36,11 @@ var keysCustom = {
   down: ['down', 's'],
   left: ['left', 'a'],
   right: ['right', 'd'],
+  takeoff: ['takeoff', 't']
 };
 
-Leap.loop(function(frame) {
+Leap.loop({enableGestures: true}, function(frame) {
+    if (!inProcess)
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
@@ -56,7 +63,49 @@ Leap.loop(function(frame) {
         
         if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
         else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+        
+        //if (screenPosition[1]>0)
+        
+        zoom=-hand.screenPosition()[1];
+        if (zoom>400 || zoom<-200)
+        leapZoom(zoom);
+        console.log(zoom);
     });
+
+
+    /*if(frame.valid && frame.gestures.length > 0 && !inProcess){
+        inProcess=true;
+        frame.gestures.forEach(function(gesture){
+            switch (gesture.type){
+                case "circle":
+                    console.log("Circle Gesture");
+                    tmp=PLANE_MOVE_SPEED;
+                    PLANE_MOVE_SPEED=tmp;
+                    var clockwise = false;
+                    var direction = frame.pointable(pointableID).direction;
+                    var dotProduct = Leap.vec3.dot(direction, gesture.normal);
+                    if (dotProduct  >  0) clockwise = true;
+                    for (i=0;i<10;i++){
+                        if (clockwise)
+                        move(DIRECTION_RIGHT, 0.005);
+                        else move(DIRECTION_LEFT, 0.005);
+                        //update();
+                    }
+                    PLANE_MOVE_SPEED=tmp;
+                    break;
+                case "keyTap":
+                    console.log("Key Tap Gesture");
+                    break;
+                case "screenTap":
+                    console.log("Screen Tap Gesture");
+                    break;
+                case "swipe":
+                    console.log("Swipe Gesture");
+                    break;
+            }
+        });
+        inProcess=false;
+    }*/
 
 }).use('screenPosition', {scale: 0.5});
 
@@ -69,6 +118,7 @@ Leap.loop(function(frame) {
 var background;
 var mapWidth = 8;   // in 1024x1024 tiles
 var mapHeight = 6;  // in 1024x1024 tiles
+<<<<<<< HEAD
 
 var startGrid, endGrid;
 var startPoint, endPoint;
@@ -76,6 +126,11 @@ var startPoint, endPoint;
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
                     'js/app/images/startEnd.png'];
+=======
+
+var preloadables = ['js/app/images/skyTile.png',
+                    'js/app/images/AeroMap.png'];
+>>>>>>> 4b9867ea0e72671dc119515be0287a30b5c6b149
 
 /**
  * Game logic
@@ -83,11 +138,12 @@ var preloadables = ['js/app/images/skyTile.png',
  */
 
 /**
- * Actors belonging to a Team that fight other Soldiers.
+ * Aeroplane
  */
 var Plane = Player.extend({
     MOVEAMOUNT: PLANE_MOVE_SPEED,
     CONTINUOUS_MOVEMENT: true,
+    MOVEWORLD: 0.4,
     //DEFAULT_WIDTH: SOLDIER_SIZE,
     //DEFAULT_HEIGHT: SOLDIER_SIZE,
     //NEAR_THRESHOLD: SHOOT_NEAR_THRESHOLD,
@@ -209,17 +265,20 @@ function move(direction, turn_angle) {
         player.orientation = 0;
         player.radians = 0;
     }
-    console.log(player.orientation);
+    //console.log(player.orientation);
 }
 /**
+ * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
     console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.left[1]){
         move(DIRECTION_LEFT, ANGLE_FACTOR);
+    }else if(e.keyPressed == keysCustom.takeoff[1]){
+        takeOffPlane();
     }
 });
 
@@ -255,6 +314,10 @@ function draw() {
 	player.draw();
 }
 
+function takeOffPlane() {
+    takeoff = true;
+    PLANE_MOVE_SPEED = DEFAULT_SPEED;
+}
 /**
  * Zooming with Leap Motion
  * @param direction
@@ -271,7 +334,7 @@ function leapZoom(direction) {
     // Depending on the browser, OS, and device settings, the actual value
     // could be in pixels, lines, pages, degrees, or arbitrary units, so all
     // we can consistently deduce from this is the direction.
-    var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
+    //var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
     // We want to scroll in around the mouse coordinates.
     var mx = player.x,
         my = player.y;
@@ -293,6 +356,9 @@ function leapZoom(direction) {
     }
     // Scroll down; zoom out
     else {
+        if(!takeoff){
+            takeOffPlane();
+        }
         if (world.scale < Mouse.Zoom.MAX_ZOOM) {
             world.scaleResolution(world.scale + Mouse.Zoom.ZOOM_STEP, mx, my);
             jQuery(document).trigger('zoom', false);
@@ -312,7 +378,10 @@ function setup(first) {
   if(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
   }
-
+    $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
+        console.log(data[0].name);
+        console.log(data[0].score);
+    });
     //Level related
     jQuery('body').append('<div id="level" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
         '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
@@ -339,15 +408,16 @@ function setup(first) {
   endPoint.src = 'js/app/images/startPoint.png';
 
   // Initialize the player.
-  player = new Plane();
+  player = new Plane(256, 200, world.height - 200, 256);
   player.src = new SpriteMap('js/app/images/AeroMap.png',
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
-
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
-  console.log(player.getVelocityVector());
+
+    console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
+
 }
