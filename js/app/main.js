@@ -363,6 +363,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
     }else if(e.keyPressed == keysCustom.takeoff[1]){
         takeOffPlane();
     }else if(e.keyPressed == keysCustom.vision[1]){
+        //TODO: Yiyang, use this method for clearing the vision
+        //TODO: Also create correspond methods for circling the tornado
         player.toggleVision(true);
     }
 });
