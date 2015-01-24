@@ -160,7 +160,7 @@ var startPoint, endPoint;
 var endPointReal;
 
 var preloadables = ['js/app/images/skyTile.png',
-                    'js/app/images/AeroMap.png',
+                    'js/app/images/Aeroplane.png',
                     'js/app/images/startEnd.png',
                     'js/app/images/startPoint.png',
                     'js/app/images/endPoint.png',
