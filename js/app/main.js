@@ -33,11 +33,11 @@ var keys = {
  * Jinyao
  * @type {Array}
  */
-var background;
-var mapWidth = 3;   // in 1024x1024 tiles
-var mapHeight = 3;  // in 1024x1024 tiles
+var bkgd;
+var bkgdTileSize = 600;
+var mapWidth = 5, mapHeight = 5;  // in bkgdTileSize
 
-var preloadables = ['js/app/images/skyTile1.png'];
+var preloadables = ['js/app/images/testTile.jpg'];
 
 /**
  * Game logic
@@ -56,7 +56,7 @@ function update() {
 function draw() {
 
   // Draw the background layer
-  background.draw();
+  bkgd.draw();
 
 	player.draw();
 }
@@ -71,7 +71,7 @@ function draw() {
 function setup(first) {
   // Change the size of the playable area. Do this before placing items!
   if(first) {
-    world.resize(1024 * mapWidth, 1024 * mapHeight);
+    world.resize(bkgdTileSize * mapWidth, bkgdTileSize * mapHeight);
   }
 
   // Switch from side view to top-down.
@@ -81,6 +81,6 @@ function setup(first) {
   player = new Player();
 
   // Set up the background layer and tile sky over it
-  background = new Layer();
-  background.context.drawPattern('js/app/images/skyTile1.png', 0, 0, world.width, world.height);
+  bkgd = new Layer();
+  bkgd.context.drawPattern('js/app/images/testTile.jpg', 0, 0, world.width, world.height);
 }
