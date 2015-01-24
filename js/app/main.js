@@ -301,10 +301,6 @@ var Plane = Player.extend({
             ));
         }
     },
-    destroy: function() {
-        this._super.apply(this, arguments);
-        this.unlisten('.select');
-    },
     directionToDest: function(){
         var xDist = endPoint.xC() - this.x;
         var yDist = endPoint.yC() - this.y;
@@ -334,8 +330,15 @@ function move(direction, turn_angle) {
 }
 
 reachDist = function(level) {
+    console.log("end");
     stopAnimating();
-    var text = "Congratulations, you have completed level " + level + "!";
+    if (player) {
+        player.destroy();
+    }
+    var text = "Level " + level + " completed!";
+    if(level == 0){
+        text = "Failed!";
+    }
     advanceToLevel(level + 1);
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
@@ -358,7 +361,9 @@ reachDist = function(level) {
     $canvas.one('click.gameover', function(e) {
         e.preventDefault();
         $canvas.css('cursor', 'auto');
-        App.reset();
+        //App.reset();
+        setup(true);
+        startAnimating();
     });
 };
 
@@ -381,29 +386,32 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
  * A magic-named function where all updates should occur.
  */
 function update() {
-    //Offset for the default orientation towards the right
-    player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
-    player.update();
+
     if(takeoff){
         player.fuel -= 0.1;
+        //Offset for the default orientation towards the right
+        player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
+        player.update();
+        if(player.fuel < 0){
+            reachDist(0);
+        }
+        console.log("fuel:" + player.fuel);
+        console.log(player.x + " " + player.y);
+        if(player.collides(endPointReal)){
+            reachDist(currentLevel);
+        }
+        var dir = player.directionToDest();
+        dirSignal.x = player.x-144;
+        dirSignal.y = player.y-144;
+        dirSignal.radians = dir;
+        var diff_in_angle = dir - player.radians;
+        if(diff_in_angle < -Math.PI/6 || diff_in_angle > Math.PI/6){
+            showDir = true;
+        }else{
+            showDir = false;
+        }
     }
-    if(player.fuel < 0){
-        App.gameOver();
-    }
-    console.log("fuel:" + player.fuel);
-    if(player.collides(endPointReal)){
-        reachDist(currentLevel);
-    }
-    var dir = player.directionToDest();
-    dirSignal.x = player.x-144;
-    dirSignal.y = player.y-144;
-    dirSignal.radians = dir;
-    var diff_in_angle = dir - player.radians;
-    if(diff_in_angle < -Math.PI/6 || diff_in_angle > Math.PI/6){
-        showDir = true;
-    }else{
-        showDir = false;
-    }
+
 }
 
 function advanceToLevel(level){
@@ -416,6 +424,7 @@ function advanceToLevel(level){
  */
 function draw() {
 
+    //console.log("drawing");
   // Draw the background layer
   background.draw();
 
@@ -497,16 +506,21 @@ function leapZoom(direction) {
  *   been reset and is starting over.
  */
 function setup(first) {
+    //App.debugMode = true;
   // Change the size of the playable area. Do this before placing items!
   if(first) {
-    world.resize(1024 * mapWidth, 1024 * mapHeight);
+        //Level related
+      advanceToLevel(1);
   }
+    world.resize(1024 * mapWidth, 1024 * mapHeight);
+    takeoff = false;
+    PLANE_MOVE_SPEED = 0;
+
     $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
         console.log(data[0].name);
         console.log(data[0].score);
     });
-    //Level related
-    advanceToLevel(1);
+
 
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
@@ -540,7 +554,7 @@ function setup(first) {
   {stand: [0, 0, 3, 0]},
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
-
+    console.log("set up: " + player.x +"  "+ player.y);
   //New Direction signal
   dirSignal = new Box(player.xC(), player.yC(), 400, 400);
   dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
