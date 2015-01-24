@@ -7,6 +7,8 @@ var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
 var UNIT = 30;
 var showZoomLevel = true;
+var lastZoom = App.physicsTimeElapsed;
+var numScrollEvents=0;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -61,6 +63,13 @@ Leap.loop({enableGestures: true}, function(frame) {
         
         if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
         else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+        
+        //if (screenPosition[1]>0)
+        
+        zoom=-hand.screenPosition()[1];
+        if (zoom>400 || zoom<-200)
+        leapZoom(zoom);
+        console.log(zoom);
     });
 
 
@@ -246,7 +255,7 @@ function move(direction, turn_angle) {
         player.orientation = 0;
         player.radians = 0;
     }
-    console.log(player.orientation);
+    //console.log(player.orientation);
 }
 /**
  * KEYBOARD
@@ -307,7 +316,7 @@ function leapZoom(direction) {
     // Depending on the browser, OS, and device settings, the actual value
     // could be in pixels, lines, pages, degrees, or arbitrary units, so all
     // we can consistently deduce from this is the direction.
-    var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
+    //var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
     // We want to scroll in around the mouse coordinates.
     var mx = player.x,
         my = player.y;
