@@ -15,6 +15,8 @@ var swipeCount = 0;
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
 var player;
+var showDir = true;
+var dirSignal;
 var inProcess=false;
 
 var takeoff = false;
@@ -51,7 +53,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         MIN_ROTATIONAL_ANGLE=0.1;
         ROLL_FACTOR=0.2;
 
-        if (!inProcess){
+        if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle<0) {//right
                 if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
@@ -160,7 +162,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
                     'js/app/images/startEnd.png',
                     'js/app/images/startPoint.png',
-                    'js/app/images/endPoint.png'];
+                    'js/app/images/endPoint.png',
+                    'js/app/images/planeArrowMap.png'];
 
 /**
  * Game logic
@@ -177,7 +180,7 @@ var Destination = Box.extend({
     },
     nearY: function(otherBox, units) {
         return this.y + this.height + units > otherBox.y && otherBox.y + otherBox.height + units > this.y;
-    },
+    }
     // Initialize the Dot in a random location that doesn't overlap the snake
     //init: function() {
     //    var x, y;
@@ -302,6 +305,14 @@ var Plane = Player.extend({
         this._super.apply(this, arguments);
         this.unlisten('.select');
         this.team.soldiers.remove(this);
+    },
+    directionToDest: function(){
+        var xDist = endPoint.xC() - this.x;
+        var yDist = endPoint.yC() - this.y;
+
+        // angle in radians
+        var angleRadians = Math.atan2(yDist, xDist);
+        return angleRadians;
     }
 });
 
@@ -342,8 +353,18 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
  */
 function update() {
     //Offset for the default orientation towards the right
-    player.setVelocityVector(Math.PI * (player.orientation+1.5), PLANE_MOVE_SPEED);
+    player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
     player.update();
+    var dir = player.directionToDest();
+    dirSignal.x = player.x;
+    dirSignal.y = player.y;
+    dirSignal.radians = dir;
+    if(dir < -Math.PI/6 || dir > Math.PI/6){
+        showDir = true;
+    }else{
+        showDir = false;
+    }
+    console.log(dir);
 }
 
 function advanceToLevel(level){
@@ -367,12 +388,15 @@ function draw() {
   endPoint.draw();
 
 	player.draw();
+    if(showDir){
+        dirSignal.draw();
+    }
 }
 
 function takeOffPlane() {
     takeoff = true;
     PLANE_MOVE_SPEED = DEFAULT_SPEED;
-    $('#overlay').hide();
+    $('#prompt').hide();
 }
 /**
  * Zooming with Leap Motion
@@ -439,9 +463,6 @@ function setup(first) {
         console.log(data[0].score);
     });
     //Level related
-    jQuery('body').append('<div id="level" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
-        '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
-        '<span class="level" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
     advanceToLevel(1);
 
   // Switch from side view to top-down.
@@ -464,14 +485,22 @@ function setup(first) {
   endPoint.src = 'js/app/images/endPoint.png';
 
   // Initialize the player.
-  player = new Plane(256, 200, world.height - 200, 256);
+  player = new Plane(256, startPoint.xC() - 200, startPoint.yC() + 30, 256);
   player.src = new SpriteMap('js/app/images/AeroMap.png',
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
+
+  //New Direction signal
+  dirSignal = new Actor(player.xC() - 72, player.yC() - 72, 400, 400);
+  dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
+  {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
+  useTimer: false});
+
+  // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
-    console.log(player.getVelocityVector());
+  console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);

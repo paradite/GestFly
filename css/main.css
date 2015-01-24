@@ -35,24 +35,37 @@ canvas {
   user-select: none;
 }
 
-#overlay {
-  text-align: left;
-  position: absolute;
-  left: 40%;
-  top: 80%;
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.5em;
-  background-color: rgba(0,0,0,0.5);
+.overlay {
   color:white;
-  padding: 2%;
-  border-radius: 10px;
+  background-color: rgba(0,0,0,0.5);
   z-index: 1;
+  font-family: 'Oswald', sans-serif;
+  position: absolute;
 }
 
-#overlay i {
+#prompt {
+  text-align: left;
+  left: 40%;
+  top: 80%;
+  font-size: 1.5em;
+  padding: 2%;
+  border-radius: 10px;
+}
+
+#prompt i {
   margin-right: 20px;
 }
 
+#levelContainer {
+  position: absolute;
+  display: inline-block;
+}
+
+#level {
+  font-size: 1.5em;
+  padding: 0.8% 3% 0.8% 2%;
+  border-radius: 0px 0px 4px 0px;
+}
 
 .animated {
   -webkit-animation-duration: 1s;
