@@ -52,6 +52,9 @@ Leap.loop(function(frame) {
                 move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
             else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
                 move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+        
+        if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
+        else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
     });
 
 }).use('screenPosition', {scale: 0.5});
