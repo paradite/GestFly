@@ -7,6 +7,8 @@ var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
 var UNIT = 30;
 var showZoomLevel = true;
+var lastZoom = App.physicsTimeElapsed;
+var numScrollEvents=0;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -61,6 +63,13 @@ Leap.loop({enableGestures: true}, function(frame) {
         
         if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
         else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+        
+        //if (screenPosition[1]>0)
+        
+        zoom=-hand.screenPosition()[1];
+        if (zoom>400 || zoom<-200)
+        leapZoom(zoom);
+        //console.log(zoom);
     });
 
 
@@ -109,9 +118,19 @@ Leap.loop({enableGestures: true}, function(frame) {
 var background;
 var mapWidth = 8;   // in 1024x1024 tiles
 var mapHeight = 6;  // in 1024x1024 tiles
+<<<<<<< HEAD
+
+var startGrid, endGrid;
+var startPoint, endPoint;
+
+var preloadables = ['js/app/images/skyTile.png',
+                    'js/app/images/AeroMap.png',
+                    'js/app/images/startEnd.png'];
+=======
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png'];
+>>>>>>> 4b9867ea0e72671dc119515be0287a30b5c6b149
 
 /**
  * Game logic
@@ -271,7 +290,7 @@ function move(direction, turn_angle) {
         player.orientation = 0;
         player.radians = 0;
     }
-    console.log(player.orientation);
+    //console.log(player.orientation);
 }
 /**
  * KEYBOARD
@@ -309,6 +328,14 @@ function draw() {
   // Draw the background layer
   background.draw();
 
+  // Draw a different 'grid' for start & end points
+  startGrid.draw();
+  endGrid.draw();
+
+  // Draw a different start & end point
+  startPoint.draw();
+  endPoint.draw();
+
 	player.draw();
 }
 
@@ -332,7 +359,7 @@ function leapZoom(direction) {
     // Depending on the browser, OS, and device settings, the actual value
     // could be in pixels, lines, pages, degrees, or arbitrary units, so all
     // we can consistently deduce from this is the direction.
-    var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
+    //var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
     // We want to scroll in around the mouse coordinates.
     var mx = player.x,
         my = player.y;
@@ -392,6 +419,18 @@ function setup(first) {
   // Set up the background layer
   background = new Layer();
   background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
+
+  startGrid = new Box(0, (world.height - 1024), 1024, 1024);
+  startGrid.src = 'js/app/images/startEnd.png';
+
+  endGrid = new Box((world.width - 1024), 0, 1024, 1024);
+  endGrid.src = 'js/app/images/startEnd.png';
+
+  startPoint = new Box((1024-256)/2, (world.height - 640), 256, 256);
+  startPoint.src = 'js/app/images/startPoint.png';
+
+  endPoint = new Box((world.width - 640), (1024-256)/2, 256, 256);
+  endPoint.src = 'js/app/images/startPoint.png';
 
   // Initialize the player.
   player = new Plane(256, 200, world.height - 200, 256);
