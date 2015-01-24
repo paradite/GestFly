@@ -338,6 +338,7 @@ function draw() {
 function takeOffPlane() {
     takeoff = true;
     PLANE_MOVE_SPEED = DEFAULT_SPEED;
+    $('#overlay').hide();
 }
 /**
  * Zooming with Leap Motion
