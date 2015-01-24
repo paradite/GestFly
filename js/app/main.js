@@ -9,6 +9,8 @@ var UNIT = 30;
 var showZoomLevel = true;
 var lastZoom = App.physicsTimeElapsed;
 var numScrollEvents=0;
+var aTimer = new Timer();
+var swipeCount = 0;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -40,7 +42,7 @@ var keysCustom = {
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
-    if (!inProcess)
+    
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
@@ -48,28 +50,30 @@ Leap.loop({enableGestures: true}, function(frame) {
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
         ROLL_FACTOR=0.2;
-        
-        if (rotationalAngle<0) {//right
-            if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-            else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+
+        if (!inProcess){
+            if (rotationalAngle<0) {//right
+                if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
+                    move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+                else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
+                    move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+            }
+            else
+                if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
+                    move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+                else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
+                    move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+
+            if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
+            else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+
+            //if (screenPosition[1]>0)
+
+            zoom=-hand.screenPosition()[1];
+            if (zoom>400 || zoom<-200)
+            leapZoom(zoom);
+            //console.log(zoom);
         }
-        else
-            if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
-                move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-            else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
-                move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
-        
-        if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
-        else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
-        
-        //if (screenPosition[1]>0)
-        
-        zoom=-hand.screenPosition()[1];
-        if (zoom>400 || zoom<-200)
-        leapZoom(zoom);
-        //console.log(zoom);
     });
 
 
@@ -103,6 +107,29 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
+                    delta=aTimer.getDelta();
+                    if (delta>0.1 && delta<0.5) {
+                        console.log(delta);
+
+                        //Classify swipe as either horizontal or vertical
+                        var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+                        //Classify as right-left or up-down
+                        if (isHorizontal) {
+                            if (gesture.direction[0] > 0) {
+                                swipeDirection = "right";
+                            } else {
+                                swipeDirection = "left";
+                            }
+                        } else { //vertical
+                            if (gesture.direction[1] > 0) {
+                                swipeDirection = "up";
+                            } else {
+                                swipeDirection = "down";
+                            }
+                        }
+
+                        console.log(swipeDirection);
+                    }
                     break;
             }
         });
@@ -448,5 +475,5 @@ function setup(first) {
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
-
+    aTimer.start();
 }
