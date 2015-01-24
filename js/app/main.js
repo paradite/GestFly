@@ -6,6 +6,10 @@
 var player;
 
 /**
+ * Control codes
+ * Yiyang
+ */
+/**
  * Keys used for various directions.
  *
  * The property names of this object indicate actions, and the values are lists
@@ -23,11 +27,19 @@ var keys = {
   right: ['right', 'd'],
 };
 
+
 /**
- * An array of image file paths to pre-load.
+ * Resources and Images Part
+ * Jinyao
+ * @type {Array}
  */
 var preloadables = [];
 
+
+/**
+ * Game logic
+ * Zhu Liang
+ */
 /**
  * A magic-named function where all updates should occur.
  */
