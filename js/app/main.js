@@ -265,12 +265,16 @@ var Plane = Player.extend({
         if(allow_vision){
             this.vision = true;
             $("#blockage").hide();
-        //    TODO: instruction disappears
+            ui.hidePrompt();
         }else{
             if(this.vision == true){
                 this.vision = false;
                 $("#blockage").show();
-        //    TODO: instruction shows for first time
+                if(! ui.hasVisionPromptDisplayed){
+                    ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
+                    ui.hasVisionPromptDisplayed = true;
+                }
+
             }
         }
     },
@@ -437,7 +441,7 @@ function draw() {
 function takeOffPlane() {
     takeoff = true;
     PLANE_MOVE_SPEED = DEFAULT_SPEED;
-    $('#prompt').hide();
+    ui.hidePrompt();
 }
 /**
  * Zooming with Leap Motion
