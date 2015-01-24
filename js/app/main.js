@@ -69,7 +69,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         zoom=-hand.screenPosition()[1];
         if (zoom>400 || zoom<-200)
         leapZoom(zoom);
-        console.log(zoom);
+        //console.log(zoom);
     });
 
 
