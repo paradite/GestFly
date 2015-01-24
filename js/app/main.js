@@ -36,12 +36,22 @@ Leap.loop(function(frame) {
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
-        if (hand.roll()>0.1 && hand.roll()<1 || hand.roll()<-0.1 && hand.roll()>-1)
-            if (hand.roll()>0)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*hand.roll());
-            else
-                move(DIRECTION_LEFT, ANGLE_FACTOR*(-hand.roll()));
-        else;
+        rotationalAngle=hand.roll();
+        MAX_ROTATIONAL_ANGLE=1.2;
+        MIN_ROTATIONAL_ANGLE=0.1;
+        ROLL_FACTOR=0.2;
+        
+        if (rotationalAngle<0) {//right
+            if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+            else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+        }
+        else
+            if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
+                move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+            else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
+                move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
     });
 
 }).use('screenPosition', {scale: 0.5});
