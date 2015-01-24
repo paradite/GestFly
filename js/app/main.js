@@ -33,7 +33,11 @@ var keys = {
  * Jinyao
  * @type {Array}
  */
-var preloadables = [];
+var background;
+var mapWidth = 3;   // in 1024x1024 tiles
+var mapHeight = 3;  // in 1024x1024 tiles
+
+var preloadables = ['js/app/images/skyTile1.png'];
 
 /**
  * Game logic
@@ -50,8 +54,9 @@ function update() {
  * A magic-named function where all drawing should occur.
  */
 function draw() {
-  // Draw a background. This is just for illustration so we can see scrolling.
-  context.drawCheckered(80, 0, 0, world.width, world.height);
+
+  // Draw the background layer
+  background.draw();
 
 	player.draw();
 }
@@ -65,11 +70,17 @@ function draw() {
  */
 function setup(first) {
   // Change the size of the playable area. Do this before placing items!
-  world.resize(canvas.width + 200, canvas.height + 200);
+  if(first) {
+    world.resize(1024 * mapWidth, 1024 * mapHeight);
+  }
 
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
 
   // Initialize the player.
   player = new Player();
+
+  // Set up the background layer and tile sky over it
+  background = new Layer();
+  background.context.drawPattern('js/app/images/skyTile1.png', 0, 0, world.width, world.height);
 }
