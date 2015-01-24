@@ -322,7 +322,7 @@ reachDist = function(level) {
     }
 
     advanceToLevel(level + 1);
-    
+
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
         context.save();
@@ -545,12 +545,12 @@ function setup(first) {
   birdFlocks = new Collection();
   var birdFlock = new Bird(1536, (world.height - 1536), 512, 512, 75, 1/4);
   var birdFlock2 = new Bird((world.height/2), (world.height/2), 512, 512, 100, 3/4);
-  var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 25, 2/4);
+  var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 30, 1/4);
   birdFlocks.add(birdFlock);
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1664, 512, 512);
+  tornado = new Actor(2196, world.height-1792, 512, 512);
   tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
   {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
   useTimer: false});
