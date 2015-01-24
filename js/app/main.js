@@ -13,6 +13,8 @@ var numScrollEvents=0;
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
 var player;
+var showDir = true;
+var dirSignal;
 var inProcess=false;
 
 var takeoff = false;
@@ -266,6 +268,14 @@ var Plane = Player.extend({
         this._super.apply(this, arguments);
         this.unlisten('.select');
         this.team.soldiers.remove(this);
+    },
+    directionToDest: function(){
+        var xDist = endPoint.xC() - this.x;
+        var yDist = endPoint.yC() - this.y;
+
+        // angle in radians
+        var angleRadians = Math.atan2(yDist, xDist);
+        return angleRadians;
     }
 });
 
@@ -306,8 +316,16 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
  */
 function update() {
     //Offset for the default orientation towards the right
-    player.setVelocityVector(Math.PI * (player.orientation+1.5), PLANE_MOVE_SPEED);
+    player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
     player.update();
+    var dir = player.directionToDest();
+    dirSignal.x = player.x;
+    dirSignal.y = player.y;
+    dirSignal.radians = dir;
+    if(dir < -Math.PI/4 || dir > Math.PI/4){
+        showDir = true;
+    }
+    console.log(dir);
 }
 
 function advanceToLevel(level){
@@ -331,6 +349,9 @@ function draw() {
   endPoint.draw();
 
 	player.draw();
+    if(showDir){
+        dirSignal.draw();
+    }
 }
 
 function takeOffPlane() {
@@ -433,6 +454,13 @@ function setup(first) {
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
+
+  //New Direction signal
+  dirSignal = new Plane(15, 200, world.height - 200, 15);
+  dirSignal.src = new SpriteMap('js/app/images/AeroMap.png',
+        {stand: [0, 0, 0, 23]},
+        {frameW: 256, frameH: 256,
+            interval: 20, useTimer: false});
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
     console.log(player.getVelocityVector());
