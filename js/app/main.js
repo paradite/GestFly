@@ -35,8 +35,11 @@ var keysCustom = {
  * Jinyao
  * @type {Array}
  */
-var preloadables = [];
+var background;
+var mapWidth = 3;   // in 1024x1024 tiles
+var mapHeight = 3;  // in 1024x1024 tiles
 
+var preloadables = ['js/app/images/skyTile1.png'];
 
 /**
  * Game logic
@@ -159,31 +162,37 @@ var Plane = Player.extend({
     },
 });
 
+function moveRight() {
+    player.orientation += 0.1;
+    if (player.orientation <= -2) {
+        player.orientation = 0;
+    }
+    if (player.orientation >= 2) {
+        player.orientation = 0;
+    }
+    console.log(player.orientation);
+    console.log(player.getVelocityVector());
+}
+function moveLeft() {
+    player.orientation -= 0.1;
+    if (player.orientation <= -2) {
+        player.orientation = 0;
+    }
+    if (player.orientation >= 2) {
+        player.orientation = 0;
+    }
+    console.log(player.orientation);
+    console.log(player.getVelocityVector());
+}
 /**
  * Record the last key pressed so the player moves in the correct direction.
  */
 jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
     console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
-        player.orientation += 0.1;
-        if(player.orientation<= -2){
-            player.orientation = 0;
-        }
-        if(player.orientation >= 2){
-            player.orientation = 0;
-        }
-        console.log(player.orientation);
-        console.log(player.getVelocityVector());
+        moveRight();
     }else if(e.keyPressed == keysCustom.left[1]){
-        player.orientation -= 0.1;
-        if(player.orientation<= -2){
-            player.orientation = 0;
-        }
-        if(player.orientation >= 2){
-            player.orientation = 0;
-        }
-        console.log(player.orientation);
-        console.log(player.getVelocityVector());
+        moveLeft();
     }
 });
 
@@ -199,8 +208,9 @@ function update() {
  * A magic-named function where all drawing should occur.
  */
 function draw() {
-  // Draw a background. This is just for illustration so we can see scrolling.
-  context.drawCheckered(80, 0, 0, world.width, world.height);
+
+  // Draw the background layer
+  background.draw();
 
 	player.draw();
 }
@@ -214,13 +224,20 @@ function draw() {
  */
 function setup(first) {
   // Change the size of the playable area. Do this before placing items!
-  world.resize(canvas.width + 200, canvas.height + 200);
+  if(first) {
+    world.resize(1024 * mapWidth, 1024 * mapHeight);
+  }
 
     // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
+
+    // Set up the background layer and tile sky over it
+    background = new Layer();
+    background.context.drawPattern('js/app/images/skyTile1.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
   player = new Plane();
     player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
     console.log(player.getVelocityVector());
+
 }
