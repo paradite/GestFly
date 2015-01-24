@@ -138,6 +138,8 @@ var endPointReal;
 var birdFlocks;
 var tornado;
 
+var sndGameLevelComplete;
+
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/Aeroplane.png',
                     'js/app/images/startEnd.png',
@@ -215,14 +217,14 @@ var Plane = Player.extend({
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
-    fuel: 100,
+    fuel: 200,
     vision: true,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
-        this.fuel = 100;
+        this.fuel = 200;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -290,6 +292,10 @@ function move(direction, turn_angle) {
 
 reachDist = function(level) {
     console.log("reach level " + level);
+
+    // Play 'level complete' sound
+    sndGameLevelComplete.play();
+
     App.isGameOver = true;
     stopAnimating();
     if (player) {
@@ -411,7 +417,7 @@ function draw() {
   // Draw a different start & end point
   startPoint.draw();
   endPoint.draw();
-  endPointReal.draw();
+  //endPointReal.draw();
 
 	player.draw();
     if(showDir){
@@ -520,7 +526,7 @@ function setup(first) {
   endPoint = new Box((world.width - 768), (1024-512)/2, 512, 512);
   endPoint.src = 'js/app/images/endPoint.png';
   endPointReal = new Box((world.width - 640), (1024-256)/2, 256, 256);
-  endPointReal.src = 'js/app/images/endPoint.png';
+  //endPointReal.src = 'js/app/images/endPoint.png';
 
   birdFlocks = new Collection();
   var birdFlock = new Bird(1536, (world.height - 1536), 512, 512, 75, 1/4);
@@ -557,4 +563,15 @@ function setup(first) {
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
     aTimer.start();
+
+    var gameBgMusic = document.getElementById('gameBgMusic');
+    gameBgMusic.setAttribute("preload", "auto");
+    gameBgMusic.autobuffer = true;    
+    gameBgMusic.load();
+    gameBgMusic.play();
+
+    sndGameLevelComplete = document.getElementById('gameLevelComplete');
+    sndGameLevelComplete.setAttribute("preload", "auto");
+    sndGameLevelComplete.autobuffer = true;    
+    sndGameLevelComplete.load();
 }
