@@ -156,6 +156,7 @@ var startPoint, endPoint;
 var endPointReal;
 
 var birdFlocks;
+var tornado;
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/Aeroplane.png',
@@ -163,7 +164,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/startPoint.png',
                     'js/app/images/endPoint.png',
                     'js/app/images/planeArrowMap.png',
-                    'js/app/images/BirdFlockMap.png'];
+                    'js/app/images/BirdFlockMap.png',
+                    'js/app/images/TornadoMap.png'];
 
 /**
  * Game logic
@@ -434,6 +436,8 @@ function draw() {
     birdFlocks.forEach(function(bird){
         bird.draw();
     });
+
+    tornado.draw();
 }
 
 function takeOffPlane() {
@@ -538,9 +542,15 @@ function setup(first) {
   var birdFlock = new Bird(1536, (world.height - 1536), 512, 512, 75, 1/4);
   var birdFlock2 = new Bird((world.height/2), (world.height/2), 512, 512, 100, 3/4);
   var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 25, 2/4);
-    birdFlocks.add(birdFlock);
-    birdFlocks.add(birdFlock2);
-    birdFlocks.add(birdFlock3);
+  birdFlocks.add(birdFlock);
+  birdFlocks.add(birdFlock2);
+  birdFlocks.add(birdFlock3);
+
+  tornado = new Actor(2048, world.height-1536, 512, 512);
+  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
+  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
+  useTimer: false})
+
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
   player.src = new SpriteMap('js/app/images/Aeroplane.png',
@@ -548,6 +558,7 @@ function setup(first) {
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
     console.log("set up: " + player.x +"  "+ player.y);
+
   //New Direction signal
   dirSignal = new Box(player.xC(), player.yC(), 400, 400);
   dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
