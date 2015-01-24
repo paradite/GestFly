@@ -327,7 +327,8 @@ function move(direction, turn_angle) {
 }
 
 reachDist = function(level) {
-    console.log("end");
+    console.log("reach level " + level);
+    App.isGameOver = true;
     stopAnimating();
     if (player) {
         player.destroy();
@@ -335,6 +336,9 @@ reachDist = function(level) {
     var text = "Level " + level + " completed!";
     if(level == 0){
         text = "Failed!";
+    }else if(level == -1){
+        text = "You ran out of fuel!";
+        level = 0;
     }
     advanceToLevel(level + 1);
     // This runs during update() before the final draw(), so we have to delay it.
@@ -359,7 +363,9 @@ reachDist = function(level) {
         e.preventDefault();
         $canvas.css('cursor', 'auto');
         //App.reset();
-        setup(true);
+        setup(false);
+        console.log("finished set up for level " + level);
+        App.isGameOver = false;
         startAnimating();
     });
 };
@@ -384,13 +390,13 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
  */
 function update() {
 
-    if(takeoff){
-        player.fuel -= 0.1;
+    if(!App.isGameOver && takeoff){
+        player.fuel -= 0.05;
         //Offset for the default orientation towards the right
         player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
         player.update();
         if(player.fuel < 0){
-            reachDist(0);
+            reachDist(-1);
         }
         console.log("fuel:" + player.fuel);
         console.log(player.x + " " + player.y);
