@@ -32,6 +32,20 @@ var keysCustom = {
   right: ['right', 'd'],
 };
 
+Leap.loop(function(frame) {
+    frame.hands.forEach(function(hand, index) {
+        //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
+        //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
+        if (hand.roll()>0.1 && hand.roll()<1 || hand.roll()<-0.1 && hand.roll()>-1)
+            if (hand.roll()>0)
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*hand.roll());
+            else
+                move(DIRECTION_LEFT, ANGLE_FACTOR*(-hand.roll()));
+        else;
+    });
+
+}).use('screenPosition', {scale: 0.5});
+
 
 /**
  * Resources and Images Part
