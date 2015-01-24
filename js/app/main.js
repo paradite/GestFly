@@ -128,7 +128,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
                     'js/app/images/startEnd.png',
                     'js/app/images/startPoint.png',
-                    'js/app/images/endPoint.png'];
+                    'js/app/images/endPoint.png',
+                    'js/app/images/planeArrowMap.png'];
 
 /**
  * Game logic
@@ -457,13 +458,17 @@ function setup(first) {
   interval: 20, useTimer: false});
 
   //New Direction signal
-  dirSignal = new Plane(300, startPoint.xC() - 100, startPoint.yC() - 50, 300);
-  dirSignal.src = 'js/app/images/planeArrow.png';
+  dirSignal = new Actor(player.xC() - 72, player.yC() - 72, 400, 400);
+  dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
+  {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
+  useTimer: false});
+
+  // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
-    console.log(player.getVelocityVector());
+  console.log(player.getVelocityVector());
 
-// Enable zooming, and display the zoom level indicator
-    Mouse.Zoom.enable(showZoomLevel);
+  // Enable zooming, and display the zoom level indicator
+  Mouse.Zoom.enable(showZoomLevel);
 
 }
