@@ -4,7 +4,7 @@ var PLANE_MOVE_SPEED = 50;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
-
+var UNIT = 30;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -66,7 +66,6 @@ var Plane = Player.extend({
     //health: SOLDIER_MAX_HEALTH,
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
-    //0 means facing top, 1/4 right, 1/2 down, 3/4 left
     orientation: 0,
     init: function(team, x, y) {
         this._super.call(this, x, y);
@@ -162,23 +161,22 @@ var Plane = Player.extend({
         this._super.apply(this, arguments);
         this.unlisten('.select');
         this.team.soldiers.remove(this);
-    },
+    }
 });
 
 function move(direction, turn_angle) {
     if(direction == DIRECTION_LEFT){
         player.orientation -= turn_angle;
+        player.radians-= turn_angle*Math.PI;
     }else{
         player.orientation += turn_angle;
+        player.radians+= turn_angle*Math.PI;
     }
-    if (player.orientation <= -2) {
+    if (player.orientation <= -2 || player.orientation >= 2) {
         player.orientation = 0;
-    }
-    if (player.orientation >= 2) {
-        player.orientation = 0;
+        player.radians = 0;
     }
     console.log(player.orientation);
-    console.log(player.getVelocityVector());
 }
 /**
  * Record the last key pressed so the player moves in the correct direction.
@@ -196,8 +194,9 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
  * A magic-named function where all updates should occur.
  */
 function update() {
-  player.update();
-    player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
+    //Offset for the default orientation towards the right
+    player.setVelocityVector(Math.PI * (player.orientation+1.5), PLANE_MOVE_SPEED);
+    player.update();
 }
 
 /**
@@ -223,6 +222,9 @@ function setup(first) {
   if(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
   }
+    jQuery('body').append('<div id="countdown" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
+        '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
+        '<span class="countdown" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
 
     // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
