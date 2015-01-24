@@ -118,7 +118,6 @@ Leap.loop({enableGestures: true}, function(frame) {
 var background;
 var mapWidth = 8;   // in 1024x1024 tiles
 var mapHeight = 6;  // in 1024x1024 tiles
-<<<<<<< HEAD
 
 var startGrid, endGrid;
 var startPoint, endPoint;
@@ -126,11 +125,6 @@ var startPoint, endPoint;
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
                     'js/app/images/startEnd.png'];
-=======
-
-var preloadables = ['js/app/images/skyTile.png',
-                    'js/app/images/AeroMap.png'];
->>>>>>> 4b9867ea0e72671dc119515be0287a30b5c6b149
 
 /**
  * Game logic
