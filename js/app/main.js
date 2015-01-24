@@ -1,6 +1,6 @@
 // The main logic for your project goes in this file.
 
-var PLANE_MOVE_SPEED = 250;
+var PLANE_MOVE_SPEED = 500;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
@@ -67,11 +67,15 @@ Leap.loop(function(frame) {
  * @type {Array}
  */
 var background;
-var mapWidth = 4;   // in 1024x1024 tiles
-var mapHeight = 3;  // in 1024x1024 tiles
+var mapWidth = 8;   // in 1024x1024 tiles
+var mapHeight = 6;  // in 1024x1024 tiles
+
+var startGrid, endGrid;
+var startPoint, endPoint;
 
 var preloadables = ['js/app/images/skyTile.png',
-                    'js/app/images/aeroMap.png'];
+                    'js/app/images/AeroMap.png',
+                    'js/app/images/startEnd.png'];
 
 /**
  * Game logic
@@ -240,6 +244,14 @@ function draw() {
   // Draw the background layer
   background.draw();
 
+  // Draw a different 'grid' for start & end points
+  startGrid.draw();
+  endGrid.draw();
+
+  // Draw a different start & end point
+  startPoint.draw();
+  endPoint.draw();
+
 	player.draw();
 }
 
@@ -313,6 +325,18 @@ function setup(first) {
   // Set up the background layer
   background = new Layer();
   background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
+
+  startGrid = new Box(0, (world.height - 1024), 1024, 1024);
+  startGrid.src = 'js/app/images/startEnd.png';
+
+  endGrid = new Box((world.width - 1024), 0, 1024, 1024);
+  endGrid.src = 'js/app/images/startEnd.png';
+
+  startPoint = new Box((1024-256)/2, (world.height - 640), 256, 256);
+  startPoint.src = 'js/app/images/startPoint.png';
+
+  endPoint = new Box((world.width - 640), (1024-256)/2, 256, 256);
+  endPoint.src = 'js/app/images/startPoint.png';
 
   // Initialize the player.
   player = new Plane();
