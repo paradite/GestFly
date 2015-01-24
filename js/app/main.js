@@ -140,12 +140,6 @@ Leap.loop({enableGestures: true}, function(frame) {
 }).use('screenPosition', {scale: 0.5});
 
 
-function turnCircle(){
-    if (inProcess) return;
-}
-
-
-
 /**
  * Resources and Images Part
  * Jinyao
