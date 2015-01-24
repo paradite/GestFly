@@ -1,5 +1,7 @@
 // The main logic for your project goes in this file.
 
+var PLANE_MOVE_SPEED = 50;
+
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -20,7 +22,7 @@ var player;
  * can have their own {@link Actor#keys keys} which will override the global
  * set.
  */
-var keys = {
+var keysCustom = {
   up: ['up', 'w'],
   down: ['down', 's'],
   left: ['left', 'a'],
@@ -40,11 +42,157 @@ var preloadables = [];
  * Game logic
  * Zhu Liang
  */
+
+/**
+ * Actors belonging to a Team that fight other Soldiers.
+ */
+var Plane = Player.extend({
+    MOVEAMOUNT: PLANE_MOVE_SPEED,
+    CONTINUOUS_MOVEMENT: true,
+    //DEFAULT_WIDTH: SOLDIER_SIZE,
+    //DEFAULT_HEIGHT: SOLDIER_SIZE,
+    //NEAR_THRESHOLD: SHOOT_NEAR_THRESHOLD,
+    //SHOOT_DELAY: RELOAD_DELAY,
+    team: null,
+    selected: false,
+    moveToX: 0,
+    moveToY: 0,
+    //health: SOLDIER_MAX_HEALTH,
+    lastShot: 0,
+    //Orientation of the plane, to be multiplied to PI
+    //0 means facing top, 1/4 right, 1/2 down, 3/4 left
+    orientation: 0,
+    init: function(team, x, y) {
+        this._super.call(this, x, y);
+        this.team = team;
+        this.lastShot = App.physicsTimeElapsed;
+        this.orientation = 0;
+        //if (team != myTeam) return; // Only allow selecting the player's team
+        var t = this;
+        // Allow selecting soldiers by clicking on them
+        this.listen('mousedown.select touchstart.select', function(e) {
+            // Left click or touch only
+            if (typeof e !== 'undefined' && e.type == 'mousedown' && e.which !== 1) {
+                return;
+            }
+            // Holding down CTRL allows selecting multiple soldiers.
+            //if (!jQuery.hotkeys.areKeysDown('ctrl')) {
+            //    t.team.soldiers.forEach(function(soldier) {
+            //        soldier.selected = false;
+            //    });
+            //}
+            console.log("selected");
+            t.toggleSelected.call(t);
+            // Don't bubble the event
+            e.stopPropagation();
+        });
+    },
+    /**
+     * Draw a soldier with colors and a health indicator.
+     */
+    drawDefault: function(ctx, x, y, w, h) {
+        // Draw the soldier
+        //this.fillStyle = this.selected ? this.team.soldierSelectedColor :
+        //    (this.isHovered() ? this.team.soldierHoverColor : this.team.soldierColor);
+        this._super.call(this, ctx, x, y, w, h);
+
+        // Draw the health indicator
+        //drawProgressBar(ctx, x, y - 10, w, h*0.2, this.health/SOLDIER_MAX_HEALTH,
+        //    '#00DA00', '#EA3311', 'black');
+    },
+    toggleSelected: function() {
+        this.selected = !this.selected;
+        // Stop moving
+        this.moveToX = this.xC();
+        this.moveToY = this.yC();
+    },
+    moveTo: function(x, y) {
+        this.moveToX = x;
+        this.moveToY = y;
+    },
+    /**
+     * Choose the best direction in order to move towards the target.
+     *
+     * Since this is just an example, the algorithm is simple: move directly
+     * towards the target. A more sophisticated algorithm should avoid obstacles.
+     */
+    chooseBestDirection: function() {
+        var dir = [];
+        if (this.xC() < this.moveToX - 1) dir.push(keys.right[0]);
+        else if (this.xC() > this.moveToX + 1) dir.push(keys.left[0]);
+        if (this.yC() < this.moveToY - 1) dir.push(keys.down[0]);
+        else if (this.yC() > this.moveToY + 1) dir.push(keys.up[0]);
+        return dir;
+    },
+    /**
+     * Cause damage to the soldier's health.
+     */
+    damage: function(dmg) {
+        this.health -= dmg;
+    },
+    /**
+     * Whether this soldier is close enough to another soldier to shoot.
+     */
+    near: function(other) {
+        return (this.x-other.x)*(this.x-other.x) +
+            (this.y-other.y)*(this.y-other.y) <
+            this.NEAR_THRESHOLD*this.NEAR_THRESHOLD;
+    },
+    /**
+     * Shoot at a target soldier.
+     */
+    shoot: function(target) {
+        if (App.physicsTimeElapsed > this.lastShot + this.SHOOT_DELAY) {
+            this.lastShot = App.physicsTimeElapsed;
+            bullets.add(new Projectile(
+                    this.x+this.width*0.5,
+                    this.y+this.width*0.5,
+                this.team,
+                target
+            ));
+        }
+    },
+    destroy: function() {
+        this._super.apply(this, arguments);
+        this.unlisten('.select');
+        this.team.soldiers.remove(this);
+    },
+});
+
+/**
+ * Record the last key pressed so the player moves in the correct direction.
+ */
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
+    console.log(e.keyPressed);
+    if(e.keyPressed == keysCustom.right[1]){
+        player.orientation += 0.1;
+        if(player.orientation<= -2){
+            player.orientation = 0;
+        }
+        if(player.orientation >= 2){
+            player.orientation = 0;
+        }
+        console.log(player.orientation);
+        console.log(player.getVelocityVector());
+    }else if(e.keyPressed == keysCustom.left[1]){
+        player.orientation -= 0.1;
+        if(player.orientation<= -2){
+            player.orientation = 0;
+        }
+        if(player.orientation >= 2){
+            player.orientation = 0;
+        }
+        console.log(player.orientation);
+        console.log(player.getVelocityVector());
+    }
+});
+
 /**
  * A magic-named function where all updates should occur.
  */
 function update() {
   player.update();
+    player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 }
 
 /**
@@ -68,9 +216,11 @@ function setup(first) {
   // Change the size of the playable area. Do this before placing items!
   world.resize(canvas.width + 200, canvas.height + 200);
 
-  // Switch from side view to top-down.
+    // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
 
   // Initialize the player.
-  player = new Player();
+  player = new Plane();
+    player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
+    console.log(player.getVelocityVector());
 }
