@@ -73,25 +73,27 @@ Leap.loop({enableGestures: true}, function(frame) {
     });
 
 
-    /*if(frame.valid && frame.gestures.length > 0 && !inProcess){
+    if(frame.valid && frame.gestures.length > 0 && !inProcess){
         inProcess=true;
         frame.gestures.forEach(function(gesture){
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
-                    tmp=PLANE_MOVE_SPEED;
-                    PLANE_MOVE_SPEED=tmp;
+                    //tmp=PLANE_MOVE_SPEED;
+                    //PLANE_MOVE_SPEED=tmp;
                     var clockwise = false;
+                    var pointableID = gesture.pointableIds[0];
                     var direction = frame.pointable(pointableID).direction;
                     var dotProduct = Leap.vec3.dot(direction, gesture.normal);
                     if (dotProduct  >  0) clockwise = true;
-                    for (i=0;i<10;i++){
+                    for (i=0;i<45;i++){
                         if (clockwise)
-                        move(DIRECTION_RIGHT, 0.005);
-                        else move(DIRECTION_LEFT, 0.005);
+                            move(DIRECTION_RIGHT, ANGLE_FACTOR/80);
+                        else move(DIRECTION_LEFT, ANGLE_FACTOR/80);
                         //update();
                     }
-                    PLANE_MOVE_SPEED=tmp;
+                    inProcess=false;
+                    //PLANE_MOVE_SPEED=tmp;
                     break;
                 case "keyTap":
                     console.log("Key Tap Gesture");
@@ -105,9 +107,14 @@ Leap.loop({enableGestures: true}, function(frame) {
             }
         });
         inProcess=false;
-    }*/
-
+    }
 }).use('screenPosition', {scale: 0.5});
+
+
+function turnCircle(){
+    if (inProcess) return;
+}
+
 
 
 /**
