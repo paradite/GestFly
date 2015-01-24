@@ -265,10 +265,12 @@ var Plane = Player.extend({
         if(allow_vision){
             this.vision = true;
             $("#blockage").hide();
+        //    TODO: instruction disappears
         }else{
             if(this.vision == true){
                 this.vision = false;
                 $("#blockage").show();
+        //    TODO: instruction shows for first time
             }
         }
     },
