@@ -118,6 +118,28 @@ var preloadables = ['js/app/images/skyTile.png',
  * Zhu Liang
  */
 
+var Destination = Box.extend({
+    // Check whether a Box is within some distance of this dot
+    near: function(otherBox, units) {
+        return this.nearX(otherBox, units) && this.nearY(otherBox, units);
+    },
+    nearX: function(otherBox, units) {
+        return this.x + this.width + units > otherBox.x && otherBox.x + otherBox.width + units > this.x;
+    },
+    nearY: function(otherBox, units) {
+        return this.y + this.height + units > otherBox.y && otherBox.y + otherBox.height + units > this.y;
+    },
+    // Initialize the Dot in a random location that doesn't overlap the snake
+    //init: function() {
+    //    var x, y;
+    //    do {
+    //        x = this.getRand(world.width);
+    //        y = this.getRand(world.height);
+    //    } while (this.near(player, UNIT*5) || this.overlapsPieces());
+    //    this._super.call(this, x, y, UNIT, UNIT);
+    //},
+});
+
 /**
  * Aeroplane
  */
@@ -235,6 +257,9 @@ var Plane = Player.extend({
 });
 
 function move(direction, turn_angle) {
+    if(!takeoff){
+        return;
+    }
     if(direction == DIRECTION_LEFT){
         player.orientation -= turn_angle;
         player.radians-= turn_angle*Math.PI;
