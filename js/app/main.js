@@ -56,7 +56,8 @@ var background;
 var mapWidth = 5;   // in 1024x1024 tiles
 var mapHeight = 5;  // in 1024x1024 tiles
 
-var preloadables = ['js/app/images/skyTile.png'];
+var preloadables = ['js/app/images/skyTile.png',
+                    'js/app/images/aeroMap.png'];
 
 /**
  * Game logic
@@ -249,6 +250,11 @@ function setup(first) {
 
   // Initialize the player.
   player = new Plane();
+  player.src = new SpriteMap('js/app/images/AeroMap.png',
+  {stand: [0, 0, 0, 23]},
+  {frameW: 256, frameH: 256,
+  interval: 20, useTimer: false});
+
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
   console.log(player.getVelocityVector());
 
