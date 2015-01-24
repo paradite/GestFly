@@ -300,7 +300,10 @@ function setup(first) {
   if(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
   }
-
+    $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
+        console.log(data[0].name);
+        console.log(data[0].score);
+    });
     //Level related
     jQuery('body').append('<div id="level" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
         '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
@@ -315,7 +318,7 @@ function setup(first) {
   background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
-  player = new Plane(256, 0, world.height, 256);
+  player = new Plane(256, 200, world.height - 200, 256);
   player.src = new SpriteMap('js/app/images/AeroMap.png',
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
