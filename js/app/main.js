@@ -107,7 +107,7 @@ var mapWidth = 4;   // in 1024x1024 tiles
 var mapHeight = 3;  // in 1024x1024 tiles
 
 var preloadables = ['js/app/images/skyTile.png',
-                    'js/app/images/aeroMap.png'];
+                    'js/app/images/AeroMap.png'];
 
 /**
  * Game logic
