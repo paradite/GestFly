@@ -60,7 +60,7 @@ Leap.loop({enableGestures: true}, function(frame) {
     });
 
 
-    if(frame.valid && frame.gestures.length > 0 && !inProcess){
+    /*if(frame.valid && frame.gestures.length > 0 && !inProcess){
         inProcess=true;
         frame.gestures.forEach(function(gesture){
             switch (gesture.type){
@@ -76,7 +76,7 @@ Leap.loop({enableGestures: true}, function(frame) {
                         if (clockwise)
                         move(DIRECTION_RIGHT, 0.005);
                         else move(DIRECTION_LEFT, 0.005);
-                        update();
+                        //update();
                     }
                     PLANE_MOVE_SPEED=tmp;
                     break;
@@ -92,7 +92,7 @@ Leap.loop({enableGestures: true}, function(frame) {
             }
         });
         inProcess=false;
-    }
+    }*/
 
 }).use('screenPosition', {scale: 0.5});
 
