@@ -1,6 +1,6 @@
 // The main logic for your project goes in this file.
 
-var PLANE_MOVE_SPEED = 250;
+var PLANE_MOVE_SPEED = 300;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
@@ -67,8 +67,8 @@ Leap.loop(function(frame) {
  * @type {Array}
  */
 var background;
-var mapWidth = 4;   // in 1024x1024 tiles
-var mapHeight = 3;  // in 1024x1024 tiles
+var mapWidth = 8;   // in 1024x1024 tiles
+var mapHeight = 6;  // in 1024x1024 tiles
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/aeroMap.png'];
@@ -79,11 +79,12 @@ var preloadables = ['js/app/images/skyTile.png',
  */
 
 /**
- * Actors belonging to a Team that fight other Soldiers.
+ * Aeroplane
  */
 var Plane = Player.extend({
     MOVEAMOUNT: PLANE_MOVE_SPEED,
     CONTINUOUS_MOVEMENT: true,
+    MOVEWORLD: 0.4,
     //DEFAULT_WIDTH: SOLDIER_SIZE,
     //DEFAULT_HEIGHT: SOLDIER_SIZE,
     //NEAR_THRESHOLD: SHOOT_NEAR_THRESHOLD,
@@ -211,7 +212,6 @@ function move(direction, turn_angle) {
  * Record the last key pressed so the player moves in the correct direction.
  */
 jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
-    console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.left[1]){
@@ -315,14 +315,14 @@ function setup(first) {
   background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
-  player = new Plane();
+  player = new Plane(256, 0, world.height, 256);
   player.src = new SpriteMap('js/app/images/AeroMap.png',
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
   interval: 20, useTimer: false});
-
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
-  console.log(player.getVelocityVector());
+
+    console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
