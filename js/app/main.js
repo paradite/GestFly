@@ -35,7 +35,6 @@ var keys = {
  */
 var preloadables = [];
 
-
 /**
  * Game logic
  * Zhu Liang
