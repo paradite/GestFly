@@ -38,9 +38,9 @@ Leap.loop(function(frame) {
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
         if (hand.roll()>0.1 && hand.roll()<1 || hand.roll()<-0.1 && hand.roll()>-1)
             if (hand.roll()>0)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR);
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*hand.roll());
             else
-                move(DIRECTION_LEFT, ANGLE_FACTOR);
+                move(DIRECTION_LEFT, ANGLE_FACTOR*(-hand.roll()));
         else;
     });
 
