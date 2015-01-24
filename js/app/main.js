@@ -124,7 +124,9 @@ var startPoint, endPoint;
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
-                    'js/app/images/startEnd.png'];
+                    'js/app/images/startEnd.png',
+                    'js/app/images/startPoint.png',
+                    'js/app/images/endPoint.png'];
 
 /**
  * Game logic
@@ -420,11 +422,11 @@ function setup(first) {
   endGrid = new Box((world.width - 1024), 0, 1024, 1024);
   endGrid.src = 'js/app/images/startEnd.png';
 
-  startPoint = new Box((1024-256)/2, (world.height - 640), 256, 256);
+  startPoint = new Box((1024-512)/2, (world.height - 768), 512, 512);
   startPoint.src = 'js/app/images/startPoint.png';
 
-  endPoint = new Box((world.width - 640), (1024-256)/2, 256, 256);
-  endPoint.src = 'js/app/images/startPoint.png';
+  endPoint = new Box((world.width - 768), (1024-512)/2, 512, 512);
+  endPoint.src = 'js/app/images/endPoint.png';
 
   // Initialize the player.
   player = new Plane(256, 200, world.height - 200, 256);
