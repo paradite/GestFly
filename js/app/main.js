@@ -162,37 +162,31 @@ var Plane = Player.extend({
     },
 });
 
-function moveRight() {
-    player.orientation += 0.1;
-    if (player.orientation <= -2) {
-        player.orientation = 0;
-    }
-    if (player.orientation >= 2) {
-        player.orientation = 0;
-    }
-    console.log(player.orientation);
-    console.log(player.getVelocityVector());
-}
-function moveLeft() {
-    player.orientation -= 0.1;
-    if (player.orientation <= -2) {
-        player.orientation = 0;
-    }
-    if (player.orientation >= 2) {
-        player.orientation = 0;
-    }
-    console.log(player.orientation);
-    console.log(player.getVelocityVector());
-}
 /**
  * Record the last key pressed so the player moves in the correct direction.
  */
 jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
     console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
-        moveRight();
+        player.orientation += 0.1;
+        if(player.orientation<= -2){
+            player.orientation = 0;
+        }
+        if(player.orientation >= 2){
+            player.orientation = 0;
+        }
+        console.log(player.orientation);
+        console.log(player.getVelocityVector());
     }else if(e.keyPressed == keysCustom.left[1]){
-        moveLeft();
+        player.orientation -= 0.1;
+        if(player.orientation<= -2){
+            player.orientation = 0;
+        }
+        if(player.orientation >= 2){
+            player.orientation = 0;
+        }
+        console.log(player.orientation);
+        console.log(player.getVelocityVector());
     }
 });
 
