@@ -178,11 +178,13 @@ var Plane = Player.extend({
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
+    fuel: 100,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
+        this.fuel = 100;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -271,7 +273,6 @@ var Plane = Player.extend({
     destroy: function() {
         this._super.apply(this, arguments);
         this.unlisten('.select');
-        this.team.soldiers.remove(this);
     },
     directionToDest: function(){
         var xDist = endPoint.xC() - this.x;
@@ -352,7 +353,13 @@ function update() {
     //Offset for the default orientation towards the right
     player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
     player.update();
-
+    if(takeoff){
+        player.fuel -= 0.1;
+    }
+    if(player.fuel < 0){
+        App.gameOver();
+    }
+    console.log("fuel:" + player.fuel);
     if(player.collides(endPointReal)){
         reachDist(currentLevel);
     }
