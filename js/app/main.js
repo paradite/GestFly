@@ -128,7 +128,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
                     'js/app/images/startEnd.png',
                     'js/app/images/startPoint.png',
-                    'js/app/images/endPoint.png'];
+                    'js/app/images/endPoint.png',
+                    'js/app/images/planeArrowMap.png'];
 
 /**
  * Game logic
@@ -361,7 +362,7 @@ function draw() {
 function takeOffPlane() {
     takeoff = true;
     PLANE_MOVE_SPEED = DEFAULT_SPEED;
-    $('#overlay').hide();
+    $('#prompt').hide();
 }
 /**
  * Zooming with Leap Motion
@@ -428,9 +429,6 @@ function setup(first) {
         console.log(data[0].score);
     });
     //Level related
-    jQuery('body').append('<div id="level" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
-        '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
-        '<span class="level" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
     advanceToLevel(1);
 
   // Switch from side view to top-down.
@@ -460,13 +458,17 @@ function setup(first) {
   interval: 20, useTimer: false});
 
   //New Direction signal
-  dirSignal = new Plane(300, startPoint.xC() - 100, startPoint.yC() - 50, 300);
-  dirSignal.src = 'js/app/images/planeArrow.png';
+  dirSignal = new Actor(player.xC() - 72, player.yC() - 72, 400, 400);
+  dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
+  {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
+  useTimer: false});
+
+  // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
-    console.log(player.getVelocityVector());
+  console.log(player.getVelocityVector());
 
-// Enable zooming, and display the zoom level indicator
-    Mouse.Zoom.enable(showZoomLevel);
+  // Enable zooming, and display the zoom level indicator
+  Mouse.Zoom.enable(showZoomLevel);
 
 }
