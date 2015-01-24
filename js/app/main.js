@@ -48,22 +48,22 @@ Leap.loop({enableGestures: true}, function(frame) {
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
-        rotationalAngle=hand.roll();
+        rotationalAngle=-hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
         ROLL_FACTOR=0.2;
 
         if (!inProcess && frame.gestures.length == 0){
-            if (rotationalAngle<0) {//right
+            if (rotationalAngle>0) {//right
                 if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-                else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
+                else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
             }
             else
-                if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
+                if (rotationalAngle<MAX_ROTATIONAL_ANGLE)
                     move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-                else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
+                else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
 
             if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
@@ -92,10 +92,10 @@ Leap.loop({enableGestures: true}, function(frame) {
                     var direction = frame.pointable(pointableID).direction;
                     var dotProduct = Leap.vec3.dot(direction, gesture.normal);
                     if (dotProduct  >  0) clockwise = true;
-                    for (i=0;i<45;i++){
+                    for (i=0;i<90;i++){
                         if (clockwise)
-                            move(DIRECTION_RIGHT, ANGLE_FACTOR/80);
-                        else move(DIRECTION_LEFT, ANGLE_FACTOR/80);
+                            move(DIRECTION_RIGHT, ANGLE_FACTOR/160);
+                        else move(DIRECTION_LEFT, ANGLE_FACTOR/160);
                         //update();
                     }
                     inProcess=false;
@@ -110,7 +110,7 @@ Leap.loop({enableGestures: true}, function(frame) {
                 case "swipe":
                     console.log("Swipe Gesture");
                     delta=aTimer.getDelta();
-                    if (delta>0.1 && delta<0.5) {
+                    if (delta>0.05 && delta<0.5) {
                         console.log(delta);
 
                         //Classify swipe as either horizontal or vertical
@@ -364,7 +364,7 @@ function update() {
     }else{
         showDir = false;
     }
-    console.log(dir);
+    //console.log(dir);
 }
 
 function advanceToLevel(level){
