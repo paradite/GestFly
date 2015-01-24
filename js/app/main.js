@@ -1,16 +1,16 @@
 // Constants
-var currentLevel = 1,
-    PLANE_MOVE_SPEED = 0
-    BIRD_MOVE_SPEED = 50,
-    DEFAULT_SPEED = 500,
-    ANGLE_FACTOR = 0.1,
-    DIRECTION_LEFT = 1,
-    DIRECTION_RIGHT = 2,
-    UNIT = 30,
-    showZoomLevel = true,
-    lastZoom = App.physicsTimeElapsed,
-    numScrollEvents=0,
-    aTimer = new Timer(),
+var currentLevel = 1;
+    PLANE_MOVE_SPEED = 0;
+    BIRD_MOVE_SPEED = 50;
+    DEFAULT_SPEED = 500;
+    ANGLE_FACTOR = 0.1;
+    DIRECTION_LEFT = 1;
+    DIRECTION_RIGHT = 2;
+    UNIT = 30;
+    showZoomLevel = true;
+    lastZoom = App.physicsTimeElapsed;
+    numScrollEvents=0;
+    aTimer = new Timer();
     swipeCount = 0;
 
 var player,
@@ -111,8 +111,8 @@ Leap.loop({enableGestures: true}, function(frame) {
                                 swipeDirection = "down";
                             }
                         }
-
-                        console.log(swipeDirection);
+                        var duration = gesture.duration;
+                        console.log(swipeDirection+" "+duration);
                     }
                     break;
             }
@@ -196,7 +196,7 @@ var Bird = Actor.extend({
         this.updateOrientaion(orientaion);
         this.BIRD_MOVE_SPEED = speed;
         this._super.call(this, x, y, sizex, sizey);
-    },
+    }
 });
 
 /**
