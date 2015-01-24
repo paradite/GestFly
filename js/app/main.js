@@ -153,12 +153,15 @@ var startGrid, endGrid;
 var startPoint, endPoint;
 var endPointReal;
 
+var birdFlock;
+
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/Aeroplane.png',
                     'js/app/images/startEnd.png',
                     'js/app/images/startPoint.png',
                     'js/app/images/endPoint.png',
-                    'js/app/images/planeArrowMap.png'];
+                    'js/app/images/planeArrowMap.png',
+                    'js/app/images/BirdFlockMap.png'];
 
 /**
  * Game logic
@@ -444,6 +447,8 @@ function draw() {
     if(showDir){
         dirSignal.draw();
     }
+
+  birdFlock.draw();
 }
 
 function takeOffPlane() {
@@ -543,6 +548,11 @@ function setup(first) {
   endPoint.src = 'js/app/images/endPoint.png';
   endPointReal = new Box((world.width - 640), (1024-256)/2, 256, 256);
   endPointReal.src = 'js/app/images/endPoint.png';
+
+  birdFlock = new Box(1536, (world.height - 1536), 512, 512);
+  birdFlock.src = new SpriteMap('js/app/images/BirdFlockMap.png',
+  {stand:[0, 0, 0, 9]}, {frameW: 512, frameH: 512, interval: 40,
+  useTimer: false});
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
