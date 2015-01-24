@@ -1,41 +1,25 @@
-// The main logic for your project goes in this file.
-var currentLevel = 1;
-var PLANE_MOVE_SPEED = 0;
-var BIRD_MOVE_SPEED = 50;
-var DEFAULT_SPEED = 500;
-var ANGLE_FACTOR = 0.1;
-var DIRECTION_LEFT = 1;
-var DIRECTION_RIGHT = 2;
-var UNIT = 30;
-var showZoomLevel = true;
-var lastZoom = App.physicsTimeElapsed;
-var numScrollEvents=0;
-var aTimer = new Timer();
-var swipeCount = 0;
-/**
- * The {@link Player} object; an {@link Actor} controlled by user input.
- */
-var player;
-var showDir = true;
-var dirSignal;
-var inProcess=false;
+// Constants
+var currentLevel = 1,
+    PLANE_MOVE_SPEED = 0
+    BIRD_MOVE_SPEED = 50,
+    DEFAULT_SPEED = 500,
+    ANGLE_FACTOR = 0.1,
+    DIRECTION_LEFT = 1,
+    DIRECTION_RIGHT = 2,
+    UNIT = 30,
+    showZoomLevel = true,
+    lastZoom = App.physicsTimeElapsed,
+    numScrollEvents=0,
+    aTimer = new Timer(),
+    swipeCount = 0;
 
-var takeoff = false;
-/**
- * Control codes
- * Yiyang
- */
-/**
- * Keys used for various directions.
- *
- * The property names of this object indicate actions, and the values are lists
- * of keyboard keys or key combinations that will invoke these actions. Valid
- * keys include anything that {@link jQuery.hotkeys} accepts. The up, down,
- * left, and right properties are required if the `keys` variable exists; if
- * you don't want to use them, just set them to an empty array. {@link Actor}s
- * can have their own {@link Actor#keys keys} which will override the global
- * set.
- */
+var player,
+    showDir = true,
+    dirSignal,
+    inProcess=false,
+    takeoff = false;
+
+// Controls
 var keysCustom = {
   up: ['up', 'w'],
   down: ['down', 's'],
@@ -46,11 +30,8 @@ var keysCustom = {
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
-    
     frame.hands.forEach(function(hand, index) {
-        //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
-        //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
-        rotationalAngle=-hand.roll();
+        rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
         ROLL_FACTOR=0.2;
@@ -79,7 +60,6 @@ Leap.loop({enableGestures: true}, function(frame) {
             //console.log(zoom);
         }
     });
-
 
     if(frame.valid && frame.gestures.length > 0 && !inProcess){
         inProcess=true;
