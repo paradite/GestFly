@@ -1,6 +1,7 @@
 // The main logic for your project goes in this file.
 
-var PLANE_MOVE_SPEED = 300;
+var PLANE_MOVE_SPEED = 0;
+var DEFAULT_SPEED = 300;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
@@ -11,6 +12,8 @@ var showZoomLevel = true;
  */
 var player;
 var inProcess=false;
+
+var takeoff = false;
 /**
  * Control codes
  * Yiyang
@@ -31,6 +34,7 @@ var keysCustom = {
   down: ['down', 's'],
   left: ['left', 'a'],
   right: ['right', 'd'],
+  takeoff: ['takeoff', 't']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -245,13 +249,17 @@ function move(direction, turn_angle) {
     console.log(player.orientation);
 }
 /**
+ * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
+    console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.left[1]){
         move(DIRECTION_LEFT, ANGLE_FACTOR);
+    }else if(e.keyPressed == keysCustom.takeoff[1]){
+        takeOffPlane();
     }
 });
 
@@ -279,6 +287,10 @@ function draw() {
 	player.draw();
 }
 
+function takeOffPlane() {
+    takeoff = true;
+    PLANE_MOVE_SPEED = DEFAULT_SPEED;
+}
 /**
  * Zooming with Leap Motion
  * @param direction
@@ -317,6 +329,9 @@ function leapZoom(direction) {
     }
     // Scroll down; zoom out
     else {
+        if(!takeoff){
+            takeOffPlane();
+        }
         if (world.scale < Mouse.Zoom.MAX_ZOOM) {
             world.scaleResolution(world.scale + Mouse.Zoom.ZOOM_STEP, mx, my);
             jQuery(document).trigger('zoom', false);
@@ -365,4 +380,5 @@ function setup(first) {
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
+
 }
