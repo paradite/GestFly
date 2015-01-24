@@ -82,8 +82,8 @@ Mouse.Zoom = {
       // we can consistently deduce from this is the direction.
       var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
       // We want to scroll in around the mouse coordinates.
-      var mx = Mouse.Coords.worldX(),
-          my = Mouse.Coords.worldY();
+      var mx = player.x,
+          my = player.y;
       // Scroll up; zoom in
       if (delta.sign() < 0) {
         if (world.scale > Mouse.Zoom.MIN_ZOOM) {
