@@ -9,6 +9,8 @@ var UNIT = 30;
 var showZoomLevel = true;
 var lastZoom = App.physicsTimeElapsed;
 var numScrollEvents=0;
+var aTimer = new Timer();
+var swipeCount = 0;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -42,7 +44,7 @@ var keysCustom = {
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
-    if (!inProcess)
+    
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
@@ -50,50 +52,54 @@ Leap.loop({enableGestures: true}, function(frame) {
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
         ROLL_FACTOR=0.2;
-        
-        if (rotationalAngle<0) {//right
-            if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-            else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+
+        if (!inProcess && frame.gestures.length == 0){
+            if (rotationalAngle<0) {//right
+                if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
+                    move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+                else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
+                    move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+            }
+            else
+                if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
+                    move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+                else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
+                    move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+
+            if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
+            else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+
+            //if (screenPosition[1]>0)
+
+            zoom=-hand.screenPosition()[1];
+            if (zoom>400 || zoom<-200)
+            leapZoom(zoom);
+            //console.log(zoom);
         }
-        else
-            if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
-                move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
-            else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
-                move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
-        
-        if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
-        else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
-        
-        //if (screenPosition[1]>0)
-        
-        zoom=-hand.screenPosition()[1];
-        if (zoom>400 || zoom<-200)
-        leapZoom(zoom);
-        //console.log(zoom);
     });
 
 
-    /*if(frame.valid && frame.gestures.length > 0 && !inProcess){
+    if(frame.valid && frame.gestures.length > 0 && !inProcess){
         inProcess=true;
         frame.gestures.forEach(function(gesture){
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
-                    tmp=PLANE_MOVE_SPEED;
-                    PLANE_MOVE_SPEED=tmp;
+                    //tmp=PLANE_MOVE_SPEED;
+                    //PLANE_MOVE_SPEED=tmp;
                     var clockwise = false;
+                    var pointableID = gesture.pointableIds[0];
                     var direction = frame.pointable(pointableID).direction;
                     var dotProduct = Leap.vec3.dot(direction, gesture.normal);
                     if (dotProduct  >  0) clockwise = true;
-                    for (i=0;i<10;i++){
+                    for (i=0;i<45;i++){
                         if (clockwise)
-                        move(DIRECTION_RIGHT, 0.005);
-                        else move(DIRECTION_LEFT, 0.005);
+                            move(DIRECTION_RIGHT, ANGLE_FACTOR/80);
+                        else move(DIRECTION_LEFT, ANGLE_FACTOR/80);
                         //update();
                     }
-                    PLANE_MOVE_SPEED=tmp;
+                    inProcess=false;
+                    //PLANE_MOVE_SPEED=tmp;
                     break;
                 case "keyTap":
                     console.log("Key Tap Gesture");
@@ -103,13 +109,41 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
+                    delta=aTimer.getDelta();
+                    if (delta>0.1 && delta<0.5) {
+                        console.log(delta);
+
+                        //Classify swipe as either horizontal or vertical
+                        var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+                        //Classify as right-left or up-down
+                        if (isHorizontal) {
+                            if (gesture.direction[0] > 0) {
+                                swipeDirection = "right";
+                            } else {
+                                swipeDirection = "left";
+                            }
+                        } else { //vertical
+                            if (gesture.direction[1] > 0) {
+                                swipeDirection = "up";
+                            } else {
+                                swipeDirection = "down";
+                            }
+                        }
+
+                        console.log(swipeDirection);
+                    }
                     break;
             }
         });
         inProcess=false;
-    }*/
-
+    }
 }).use('screenPosition', {scale: 0.5});
+
+
+function turnCircle(){
+    if (inProcess) return;
+}
+
 
 
 /**
@@ -147,7 +181,7 @@ var Destination = Box.extend({
     },
     nearY: function(otherBox, units) {
         return this.y + this.height + units > otherBox.y && otherBox.y + otherBox.height + units > this.y;
-    },
+    }
     // Initialize the Dot in a random location that doesn't overlap the snake
     //init: function() {
     //    var x, y;
@@ -514,7 +548,7 @@ function setup(first) {
 
   console.log(player.getVelocityVector());
 
-  // Enable zooming, and display the zoom level indicator
-  Mouse.Zoom.enable(showZoomLevel);
-
+// Enable zooming, and display the zoom level indicator
+    Mouse.Zoom.enable(showZoomLevel);
+    aTimer.start();
 }
