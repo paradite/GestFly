@@ -1,7 +1,8 @@
 // The main logic for your project goes in this file.
 var currentLevel = 1;
 var PLANE_MOVE_SPEED = 0;
-var DEFAULT_SPEED = 800;
+var BIRD_MOVE_SPEED = 50;
+var DEFAULT_SPEED = 500;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
@@ -40,7 +41,8 @@ var keysCustom = {
   down: ['down', 's'],
   left: ['left', 'a'],
   right: ['right', 'd'],
-  takeoff: ['takeoff', 't']
+  takeoff: ['takeoff', 't'],
+  vision: ['vision', 'v']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -153,7 +155,7 @@ var startGrid, endGrid;
 var startPoint, endPoint;
 var endPointReal;
 
-var birdFlock;
+var birdFlocks;
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/Aeroplane.png',
@@ -191,6 +193,28 @@ var Destination = Box.extend({
 });
 
 /**
+ * Bird
+ * @type {void|*}
+ */
+var Bird = Actor.extend({
+    BIRD_MOVE_SPEED: 0,
+    CONTINUOUS_MOVEMENT: true,
+    orientation: 0,
+    src: new SpriteMap('js/app/images/BirdFlockMap.png',
+        {stand:[0, 0, 0, 9]}, {frameW: 512, frameH: 512, interval: 40,
+            useTimer: false}),
+    updateOrientaion: function(fraction){
+        this.radians = fraction * Math.PI;
+        this.orientation = fraction;
+    },
+    init: function(x, y, sizex, sizey, speed, orientaion) {
+        this.updateOrientaion(orientaion);
+        this.BIRD_MOVE_SPEED = speed;
+        this._super.call(this, x, y, sizex, sizey);
+    },
+});
+
+/**
  * Aeroplane
  */
 var Plane = Player.extend({
@@ -210,6 +234,7 @@ var Plane = Player.extend({
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
     fuel: 100,
+    vision: true,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
@@ -236,69 +261,15 @@ var Plane = Player.extend({
             e.stopPropagation();
         });
     },
-    /**
-     * Draw a soldier with colors and a health indicator.
-     */
-    drawDefault: function(ctx, x, y, w, h) {
-        // Draw the soldier
-        //this.fillStyle = this.selected ? this.team.soldierSelectedColor :
-        //    (this.isHovered() ? this.team.soldierHoverColor : this.team.soldierColor);
-        this._super.call(this, ctx, x, y, w, h);
-
-        // Draw the health indicator
-        //drawProgressBar(ctx, x, y - 10, w, h*0.2, this.health/SOLDIER_MAX_HEALTH,
-        //    '#00DA00', '#EA3311', 'black');
-    },
-    toggleSelected: function() {
-        this.selected = !this.selected;
-        // Stop moving
-        this.moveToX = this.xC();
-        this.moveToY = this.yC();
-    },
-    moveTo: function(x, y) {
-        this.moveToX = x;
-        this.moveToY = y;
-    },
-    /**
-     * Choose the best direction in order to move towards the target.
-     *
-     * Since this is just an example, the algorithm is simple: move directly
-     * towards the target. A more sophisticated algorithm should avoid obstacles.
-     */
-    chooseBestDirection: function() {
-        var dir = [];
-        if (this.xC() < this.moveToX - 1) dir.push(keys.right[0]);
-        else if (this.xC() > this.moveToX + 1) dir.push(keys.left[0]);
-        if (this.yC() < this.moveToY - 1) dir.push(keys.down[0]);
-        else if (this.yC() > this.moveToY + 1) dir.push(keys.up[0]);
-        return dir;
-    },
-    /**
-     * Cause damage to the soldier's health.
-     */
-    damage: function(dmg) {
-        this.health -= dmg;
-    },
-    /**
-     * Whether this soldier is close enough to another soldier to shoot.
-     */
-    near: function(other) {
-        return (this.x-other.x)*(this.x-other.x) +
-            (this.y-other.y)*(this.y-other.y) <
-            this.NEAR_THRESHOLD*this.NEAR_THRESHOLD;
-    },
-    /**
-     * Shoot at a target soldier.
-     */
-    shoot: function(target) {
-        if (App.physicsTimeElapsed > this.lastShot + this.SHOOT_DELAY) {
-            this.lastShot = App.physicsTimeElapsed;
-            bullets.add(new Projectile(
-                    this.x+this.width*0.5,
-                    this.y+this.width*0.5,
-                this.team,
-                target
-            ));
+    toggleVision: function(allow_vision) {
+        if(allow_vision){
+            this.vision = true;
+            $("#blockage").hide();
+        }else{
+            if(this.vision == true){
+                this.vision = false;
+                $("#blockage").show();
+            }
         }
     },
     directionToDest: function(){
@@ -385,6 +356,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
         move(DIRECTION_LEFT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.takeoff[1]){
         takeOffPlane();
+    }else if(e.keyPressed == keysCustom.vision[1]){
+        player.toggleVision(true);
     }
 });
 
@@ -401,6 +374,13 @@ function update() {
         if(player.fuel < 0){
             reachDist(-1);
         }
+        birdFlocks.forEach(function(bird){
+            bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
+            bird.update();
+            if(bird.collides(player)){
+                player.toggleVision(false);
+            }
+        });
         console.log("fuel:" + player.fuel);
         console.log(player.x + " " + player.y);
         if(player.collides(endPointReal)){
@@ -447,8 +427,9 @@ function draw() {
     if(showDir){
         dirSignal.draw();
     }
-
-  birdFlock.draw();
+    birdFlocks.forEach(function(bird){
+        bird.draw();
+    });
 }
 
 function takeOffPlane() {
@@ -549,11 +530,13 @@ function setup(first) {
   endPointReal = new Box((world.width - 640), (1024-256)/2, 256, 256);
   endPointReal.src = 'js/app/images/endPoint.png';
 
-  birdFlock = new Box(1536, (world.height - 1536), 512, 512);
-  birdFlock.src = new SpriteMap('js/app/images/BirdFlockMap.png',
-  {stand:[0, 0, 0, 9]}, {frameW: 512, frameH: 512, interval: 40,
-  useTimer: false});
-
+  birdFlocks = new Collection();
+  var birdFlock = new Bird(1536, (world.height - 1536), 512, 512, 75, 1/4);
+  var birdFlock2 = new Bird((world.height/2), (world.height/2), 512, 512, 100, 3/4);
+  var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 25, 2/4);
+    birdFlocks.add(birdFlock);
+    birdFlocks.add(birdFlock2);
+    birdFlocks.add(birdFlock3);
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
   player.src = new SpriteMap('js/app/images/Aeroplane.png',
