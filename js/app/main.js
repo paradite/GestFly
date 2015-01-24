@@ -37,12 +37,25 @@ Leap.loop(function(frame) {
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
-        if (hand.roll()>0.1 && hand.roll()<1 || hand.roll()<-0.1 && hand.roll()>-1)
-            if (hand.roll()>0)
-                move(DIRECTION_RIGHT, ANGLE_FACTOR*hand.roll());
-            else
-                move(DIRECTION_LEFT, ANGLE_FACTOR*(-hand.roll()));
-        else;
+        rotationalAngle=hand.roll();
+        MAX_ROTATIONAL_ANGLE=1.2;
+        MIN_ROTATIONAL_ANGLE=0.1;
+        ROLL_FACTOR=0.2;
+        
+        if (rotationalAngle<0) {//right
+            if (rotationalAngle<-MAX_ROTATIONAL_ANGLE)
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+            else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
+                move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+        }
+        else
+            if (rotationalAngle>MAX_ROTATIONAL_ANGLE)
+                move(DIRECTION_LEFT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
+            else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
+                move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+        
+        if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
+        else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
     });
 
 }).use('screenPosition', {scale: 0.5});
@@ -57,7 +70,8 @@ var background;
 var mapWidth = 5;   // in 1024x1024 tiles
 var mapHeight = 5;  // in 1024x1024 tiles
 
-var preloadables = ['js/app/images/skyTile.png'];
+var preloadables = ['js/app/images/skyTile.png',
+                    'js/app/images/aeroMap.png'];
 
 /**
  * Game logic
@@ -293,17 +307,22 @@ function setup(first) {
         '<span class="level" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
     advanceToLevel(1);
 
-    // Switch from side view to top-down.
+  // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
 
-    // Set up the background layer and tile sky over it
-    background = new Layer();
-    background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
+  // Set up the background layer
+  background = new Layer();
+  background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
   player = new Plane();
-    player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
-    console.log(player.getVelocityVector());
+  player.src = new SpriteMap('js/app/images/AeroMap.png',
+  {stand: [0, 0, 0, 23]},
+  {frameW: 256, frameH: 256,
+  interval: 20, useTimer: false});
+
+  player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
+  console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
