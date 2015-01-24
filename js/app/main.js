@@ -1,6 +1,9 @@
 // The main logic for your project goes in this file.
 
 var PLANE_MOVE_SPEED = 50;
+var ANGLE_FACTOR = 0.1;
+var DIRECTION_LEFT = 1;
+var DIRECTION_RIGHT = 2;
 
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
@@ -162,31 +165,30 @@ var Plane = Player.extend({
     },
 });
 
+function move(direction, turn_angle) {
+    if(direction == DIRECTION_LEFT){
+        player.orientation -= turn_angle;
+    }else{
+        player.orientation += turn_angle;
+    }
+    if (player.orientation <= -2) {
+        player.orientation = 0;
+    }
+    if (player.orientation >= 2) {
+        player.orientation = 0;
+    }
+    console.log(player.orientation);
+    console.log(player.getVelocityVector());
+}
 /**
  * Record the last key pressed so the player moves in the correct direction.
  */
 jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right).join(' '), function(e) {
     console.log(e.keyPressed);
     if(e.keyPressed == keysCustom.right[1]){
-        player.orientation += 0.1;
-        if(player.orientation<= -2){
-            player.orientation = 0;
-        }
-        if(player.orientation >= 2){
-            player.orientation = 0;
-        }
-        console.log(player.orientation);
-        console.log(player.getVelocityVector());
+        move(DIRECTION_RIGHT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.left[1]){
-        player.orientation -= 0.1;
-        if(player.orientation<= -2){
-            player.orientation = 0;
-        }
-        if(player.orientation >= 2){
-            player.orientation = 0;
-        }
-        console.log(player.orientation);
-        console.log(player.getVelocityVector());
+        move(DIRECTION_LEFT, ANGLE_FACTOR);
     }
 });
 
