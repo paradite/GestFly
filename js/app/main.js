@@ -138,7 +138,8 @@ var endPointReal;
 var birdFlocks;
 var tornado;
 
-var sndGameLevelComplete;
+var gameBgMusic;
+var sndGameLevelComplete, sndGameLevelFailed;
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/Aeroplane.png',
@@ -293,22 +294,35 @@ function move(direction, turn_angle) {
 reachDist = function(level) {
     console.log("reach level " + level);
 
-    // Play 'level complete' sound
-    sndGameLevelComplete.play();
-
     App.isGameOver = true;
     stopAnimating();
+    gameBgMusic.pause();
+    gameBgMusic.currentTime = 0;
+
     if (player) {
         player.destroy();
     }
+
     var text = "Level " + level + " completed!";
-    if(level == 0){
-        text = "Failed!";
-    }else if(level == -1){
+
+    if(level == 0) {
+        text = "Failed!"; // What is this for?
+    }
+    else if(level == -1) {
         text = "You ran out of fuel!";
         level = 0;
+
+        // Play 'level failed' sound
+        sndGameLevelFailed.play();
     }
+    else {
+        // Made it to next level
+        // Play 'level complete' sound
+        sndGameLevelComplete.play();
+    }
+
     advanceToLevel(level + 1);
+    
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
         context.save();
@@ -564,7 +578,7 @@ function setup(first) {
     Mouse.Zoom.enable(showZoomLevel);
     aTimer.start();
 
-    var gameBgMusic = document.getElementById('gameBgMusic');
+    gameBgMusic = document.getElementById('gameBgMusic');
     gameBgMusic.setAttribute("preload", "auto");
     gameBgMusic.autobuffer = true;    
     gameBgMusic.load();
@@ -574,4 +588,9 @@ function setup(first) {
     sndGameLevelComplete.setAttribute("preload", "auto");
     sndGameLevelComplete.autobuffer = true;    
     sndGameLevelComplete.load();
+
+    sndGameLevelFailed = document.getElementById('gameLevelFailed');
+    sndGameLevelFailed.setAttribute("preload", "auto");
+    sndGameLevelFailed.autobuffer = true;    
+    sndGameLevelFailed.load();
 }
