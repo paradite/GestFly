@@ -1,7 +1,7 @@
 // The main logic for your project goes in this file.
-
+var currentLevel = 1;
 var PLANE_MOVE_SPEED = 0;
-var DEFAULT_SPEED = 300;
+var DEFAULT_SPEED = 800;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
@@ -123,6 +123,7 @@ var mapHeight = 6;  // in 1024x1024 tiles
 
 var startGrid, endGrid;
 var startPoint, endPoint;
+var endPointReal;
 
 var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/AeroMap.png',
@@ -299,12 +300,42 @@ function move(direction, turn_angle) {
     }
     //console.log(player.orientation);
 }
+
+reachDist = function(level) {
+    stopAnimating();
+    var text = "Congratulations, you have completed level " + level + "!";
+    advanceToLevel(level + 1);
+    // This runs during update() before the final draw(), so we have to delay it.
+    setTimeout(function() {
+        context.save();
+        context.font = '100px Arial';
+        context.fillStyle = 'black';
+        context.strokeStyle = 'lightGray';
+        context.textBaseline = 'middle';
+        context.textAlign = 'center';
+        context.shadowColor = 'black';
+        context.shadowBlur = 8;
+        context.lineWidth = 5;
+        var x = Math.round(world.xOffset+canvas.width/2);
+        var y = Math.round(world.yOffset+canvas.height/2);
+        context.strokeText(text, x, y);
+        context.fillText(text, x, y);
+        context.restore();
+    }, 100);
+    $canvas.css('cursor', 'pointer');
+    $canvas.one('click.gameover', function(e) {
+        e.preventDefault();
+        $canvas.css('cursor', 'auto');
+        App.reset();
+    });
+};
+
 /**
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
 jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
-    console.log(e.keyPressed);
+
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
     }else if(e.keyPressed == keysCustom.left[1]){
@@ -321,19 +352,24 @@ function update() {
     //Offset for the default orientation towards the right
     player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
     player.update();
+
+    if(player.collides(endPointReal)){
+        reachDist(currentLevel);
+    }
     var dir = player.directionToDest();
-    dirSignal.x = player.x;
-    dirSignal.y = player.y;
+    dirSignal.x = player.x-144;
+    dirSignal.y = player.y-144;
     dirSignal.radians = dir;
-    if(dir < -Math.PI/6 || dir > Math.PI/6){
+    var diff_in_angle = dir - player.radians;
+    if(diff_in_angle < -Math.PI/6 || diff_in_angle > Math.PI/6){
         showDir = true;
     }else{
         showDir = false;
     }
-    console.log(dir);
 }
 
 function advanceToLevel(level){
+    currentLevel = level;
     var $level = jQuery('#level .level').text(level);
 }
 
@@ -352,6 +388,7 @@ function draw() {
   // Draw a different start & end point
   startPoint.draw();
   endPoint.draw();
+  endPointReal.draw();
 
 	player.draw();
     if(showDir){
@@ -449,6 +486,8 @@ function setup(first) {
 
   endPoint = new Box((world.width - 768), (1024-512)/2, 512, 512);
   endPoint.src = 'js/app/images/endPoint.png';
+  endPointReal = new Box((world.width - 640), (1024-256)/2, 256, 256);
+  endPointReal.src = 'js/app/images/endPoint.png';
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -458,7 +497,7 @@ function setup(first) {
   interval: 20, useTimer: false});
 
   //New Direction signal
-  dirSignal = new Actor(player.xC() - 72, player.yC() - 72, 400, 400);
+  dirSignal = new Box(player.xC(), player.yC(), 400, 400);
   dirSignal.src = new SpriteMap('js/app/images/planeArrowMap.png',
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
