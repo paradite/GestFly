@@ -9,7 +9,7 @@ var UNIT = 30;
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
 var player;
-
+var inProcess=false;
 /**
  * Control codes
  * Yiyang
@@ -32,7 +32,8 @@ var keysCustom = {
   right: ['right', 'd'],
 };
 
-Leap.loop(function(frame) {
+Leap.loop({enableGestures: true}, function(frame) {
+    if (!inProcess)
     frame.hands.forEach(function(hand, index) {
         //output.innerHTML = 'Frame: ' + frame.id + ' roll: ' + hand.roll();
         //output.innerHTML = frame.toString() +'<br/>'+hand.toString();
@@ -56,6 +57,41 @@ Leap.loop(function(frame) {
         if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
         else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
     });
+
+
+    if(frame.valid && frame.gestures.length > 0 && !inProcess){
+        inProcess=true;
+        frame.gestures.forEach(function(gesture){
+            switch (gesture.type){
+                case "circle":
+                    console.log("Circle Gesture");
+                    tmp=PLANE_MOVE_SPEED;
+                    PLANE_MOVE_SPEED=tmp;
+                    var clockwise = false;
+                    var direction = frame.pointable(pointableID).direction;
+                    var dotProduct = Leap.vec3.dot(direction, gesture.normal);
+                    if (dotProduct  >  0) clockwise = true;
+                    for (i=0;i<10;i++){
+                        if (clockwise)
+                        move(DIRECTION_RIGHT, 0.005);
+                        else move(DIRECTION_LEFT, 0.005);
+                        update();
+                    }
+                    PLANE_MOVE_SPEED=tmp;
+                    break;
+                case "keyTap":
+                    console.log("Key Tap Gesture");
+                    break;
+                case "screenTap":
+                    console.log("Screen Tap Gesture");
+                    break;
+                case "swipe":
+                    console.log("Swipe Gesture");
+                    break;
+            }
+        });
+        inProcess=false;
+    }
 
 }).use('screenPosition', {scale: 0.5});
 
