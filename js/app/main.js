@@ -39,10 +39,10 @@ var keysCustom = {
  * @type {Array}
  */
 var background;
-var mapWidth = 3;   // in 1024x1024 tiles
-var mapHeight = 3;  // in 1024x1024 tiles
+var mapWidth = 5;   // in 1024x1024 tiles
+var mapHeight = 5;  // in 1024x1024 tiles
 
-var preloadables = ['js/app/images/skyTile1.png'];
+var preloadables = ['js/app/images/skyTile.png'];
 
 /**
  * Game logic
@@ -229,7 +229,7 @@ function setup(first) {
 
     // Set up the background layer and tile sky over it
     background = new Layer();
-    background.context.drawPattern('js/app/images/skyTile1.png', 0, 0, world.width, world.height);
+    background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
   player = new Plane();
