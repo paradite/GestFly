@@ -453,7 +453,7 @@ function setup(first) {
   endPoint.src = 'js/app/images/endPoint.png';
 
   // Initialize the player.
-  player = new Plane(256, startPoint.xC() - 200, startPoint.yC() + 30, 256);
+  player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
   player.src = new SpriteMap('js/app/images/AeroMap.png',
   {stand: [0, 0, 0, 23]},
   {frameW: 256, frameH: 256,
