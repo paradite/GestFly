@@ -1,10 +1,11 @@
 // The main logic for your project goes in this file.
 
-var PLANE_MOVE_SPEED = 50;
+var PLANE_MOVE_SPEED = 250;
 var ANGLE_FACTOR = 0.1;
 var DIRECTION_LEFT = 1;
 var DIRECTION_RIGHT = 2;
 var UNIT = 30;
+var showZoomLevel = true;
 /**
  * The {@link Player} object; an {@link Actor} controlled by user input.
  */
@@ -213,6 +214,10 @@ function update() {
     player.update();
 }
 
+function advanceToLevel(level){
+    var $level = jQuery('#level .level').text(level);
+}
+
 /**
  * A magic-named function where all drawing should occur.
  */
@@ -222,6 +227,51 @@ function draw() {
   background.draw();
 
 	player.draw();
+}
+
+/**
+ * Zooming with Leap Motion
+ * @param direction
+ * <0 means zoom in, >0 means zoom out
+ */
+function leapZoom(direction) {
+    // Avoid overzealous scrolling causing unexpected zooming
+    if (lastZoom + Mouse.Zoom.ZOOM_TIMEOUT > App.physicsTimeElapsed) return;
+    if (++numScrollEvents < Mouse.Zoom.MIN_SCROLL_EVENTS) return;
+    lastZoom = App.physicsTimeElapsed;
+    numScrollEvents = 0;
+
+    // Get an indication of the direction of the scroll.
+    // Depending on the browser, OS, and device settings, the actual value
+    // could be in pixels, lines, pages, degrees, or arbitrary units, so all
+    // we can consistently deduce from this is the direction.
+    var delta = e.originalEvent.deltaY || -e.originalEvent.wheelDelta;
+    // We want to scroll in around the mouse coordinates.
+    var mx = player.x,
+        my = player.y;
+    // Scroll up; zoom in
+    if (direction < 0) {
+        if (world.scale > Mouse.Zoom.MIN_ZOOM) {
+            world.scaleResolution(world.scale - Mouse.Zoom.ZOOM_STEP, mx, my);
+            /**
+             * @event zoom
+             *   Fires on the document when the user zooms in or out.
+             *
+             * @param {Boolean} zoomIn
+             *   Whether the user zoomed in or out.
+             *
+             * @member global
+             */
+            jQuery(document).trigger('zoom', true);
+        }
+    }
+    // Scroll down; zoom out
+    else {
+        if (world.scale < Mouse.Zoom.MAX_ZOOM) {
+            world.scaleResolution(world.scale + Mouse.Zoom.ZOOM_STEP, mx, my);
+            jQuery(document).trigger('zoom', false);
+        }
+    }
 }
 
 /**
@@ -236,9 +286,12 @@ function setup(first) {
   if(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
   }
-    jQuery('body').append('<div id="countdown" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
+
+    //Level related
+    jQuery('body').append('<div id="level" style="background-color: rgba(240, 240, 240, 0.9); border: 1px solid black; box-shadow: 0 0 10px 1px white; font-size: ' + (UNIT * 2) + 'px; height: ' + (UNIT * 3) + 'px; left: 0; top: 0; position: absolute; overflow: hidden; pointer-events: none; text-align: center; z-index: 10;">' +
         '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
-        '<span class="countdown" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
+        '<span class="level" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
+    advanceToLevel(1);
 
     // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
@@ -252,4 +305,6 @@ function setup(first) {
     player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
     console.log(player.getVelocityVector());
 
+// Enable zooming, and display the zoom level indicator
+    Mouse.Zoom.enable(showZoomLevel);
 }
