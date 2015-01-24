@@ -250,16 +250,16 @@ function setup(first) {
         '<span class="instructions" style=" display: block; font-size: ' + (UNIT/3) + 'px; margin-top: +' + (UNIT*0.1) + 'px;">Current Level</span>' +
         '<span class="countdown" style="display: inline-block; height: ' + ((UNIT - 2) * 3) + 'px; padding: 0px 20px; width: ' + (UNIT * 5 - 42) + 'px;">0</span></div>');
 
-    // Switch from side view to top-down.
+  // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
 
-    // Set up the background layer and tile sky over it
-    background = new Layer();
-    background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
+  // Set up the background layer
+  background = new Layer();
+  background.context.drawPattern('js/app/images/skyTile.png', 0, 0, world.width, world.height);
 
   // Initialize the player.
   player = new Plane();
-    player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
-    console.log(player.getVelocityVector());
+  player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
+  console.log(player.getVelocityVector());
 
 }
