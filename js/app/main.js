@@ -31,7 +31,8 @@ var keysCustom = {
   left: ['left', 'a'],
   right: ['right', 'd'],
   takeoff: ['takeoff', 't'],
-  vision: ['vision', 'v']
+  vision: ['vision', 'v'],
+  escape: ['escape', 'e']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -225,6 +226,18 @@ var Bird = Actor.extend({
 });
 
 /**
+ * Tornado
+ */
+var Tornado = Actor.extend({
+    active: true,
+    src: new SpriteMap('js/app/images/TornadoMap.png',
+    {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20, useTimer: false}),
+    init: function(x, y, sizeX, sizeY) {
+        this._super.call(this, x, y, sizeX, sizeY);
+    }
+});
+
+/**
  * Aeroplane
  */
 var Plane = Player.extend({
@@ -275,12 +288,15 @@ var Plane = Player.extend({
     toggleVision: function(allow_vision) {
         if(allow_vision){
             this.vision = true;
-            $("#blockage").hide();
+            game.destroyBirdShit();
             ui.hidePrompt();
         }else{
             if(this.vision == true){
                 this.vision = false;
-                $("#blockage").show();
+                if(!game.birdShit()) {
+                    var canvas = background.canvas;
+                    game.createBirdShit($(window).height(),$(window).width());
+                }
                 if(! ui.hasVisionPromptDisplayed){
                     ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
                     ui.hasVisionPromptDisplayed = true;
@@ -300,6 +316,9 @@ var Plane = Player.extend({
     loseControl: function(bLostControl) {
         if(bLostControl) {
             this.draggedByTornado = true;
+
+            // Deactivate the tornado, prevent getting stuck in again
+            tornado.active = false;
 
             // Slow down the plane's speed
             PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
@@ -395,7 +414,7 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision, keysCustom.escape).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -407,6 +426,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
         //TODO: Yiyang, use this method for clearing the vision
         //TODO: Also create correspond methods for circling the tornado
         player.toggleVision(true);
+    }else if(e.keyPressed == keysCustom.escape[1]){
+        player.loseControl(false);
     }
 });
 
@@ -419,7 +440,7 @@ function update() {
         player.fuel -= 0.05;
 
         if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
-            PLANE_MOVE_SPEED += 50;
+            PLANE_MOVE_SPEED += 2;
         }
 
         //Offset for the default orientation towards the right
@@ -438,7 +459,7 @@ function update() {
             }
         });
 
-        if(!player.draggedByTornado && tornado.collides(player)) {
+        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
             player.loseControl(true);
             console.log("Player lost control!");
         }
@@ -501,6 +522,8 @@ function draw() {
     tornado.draw();
 
     dragOverlay.context.clear();
+    if(game.birdShit())
+        game.birdShit().draw(dragOverlay.context);
     fuelTank.draw();
 }
 

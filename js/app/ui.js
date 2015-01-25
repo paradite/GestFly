@@ -23,8 +23,15 @@ var ui = (function(window, $){
         $('#prompt').show();
     }
 
+    // Hides the teaching prompt
     function hidePrompt(){
         $('#prompt').hide();
+    }
+
+    // Displays the blockage
+    function displayBlockage()
+    {
+
     }
 
     return {
