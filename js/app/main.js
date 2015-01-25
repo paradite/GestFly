@@ -1,23 +1,26 @@
 // Constants
-var currentLevel = 1;
-    PLANE_MOVE_SPEED = 0;
-    BIRD_MOVE_SPEED = 50;
-    DEFAULT_SPEED = 500;
-    ANGLE_FACTOR = 0.1;
-    DIRECTION_LEFT = 1;
-    DIRECTION_RIGHT = 2;
-    UNIT = 30;
-    showZoomLevel = true;
-    lastZoom = App.physicsTimeElapsed;
-    numScrollEvents=0;
-    aTimer = new Timer();
-    swipeCount = 0;
+var currentLevel = 1,
+    PLANE_MOVE_SPEED = 0,
+    BIRD_MOVE_SPEED = 50,
+    DEFAULT_SPEED = 500,
+    ANGLE_FACTOR = 0.1,
+    DIRECTION_LEFT = 1,
+    DIRECTION_RIGHT = 2,
+    UNIT = 30,
+    showZoomLevel = true,
+    lastZoom = App.physicsTimeElapsed,
+    numScrollEvents=0,
+    aTimer = new Timer(),
+    swipeCount = 0,
+    MAX_FUEL = 200;
 
 var player,
     showDir = true,
     dirSignal,
     inProcess=false,
-    takeoff = false;
+    takeoff = false,
+    fuelTank,
+    dragOverlay;
 
 // Controls
 var keysCustom = {
@@ -223,14 +226,15 @@ var Plane = Player.extend({
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
-    fuel: 200,
+    fuel: 0,
     vision: true,
+    draggedByTornado: false,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
-        this.fuel = 200;
+        this.fuel = MAX_FUEL;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -275,11 +279,24 @@ var Plane = Player.extend({
         // angle in radians
         var angleRadians = Math.atan2(yDist, xDist);
         return angleRadians;
+    },
+    loseControl: function(bLostControl) {
+        if(bLostControl) {
+            this.draggedByTornado = true;
+
+            // Slow down the plane's speed
+            PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
+
+            // Ask player to do something to get rid of the tornado
+        }
+        else {
+            this.draggedByTornado = false;
+        }
     }
 });
 
 function move(direction, turn_angle) {
-    if(!takeoff){
+    if(!takeoff || !player.vision){
         return;
     }
     if(direction == DIRECTION_LEFT){
@@ -327,7 +344,7 @@ reachDist = function(level) {
     }
 
     advanceToLevel(level + 1);
-    
+
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
         context.save();
@@ -361,7 +378,7 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -383,12 +400,19 @@ function update() {
 
     if(!App.isGameOver && takeoff){
         player.fuel -= 0.05;
+
+        if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
+            PLANE_MOVE_SPEED += 50;
+        }
+
         //Offset for the default orientation towards the right
         player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
         player.update();
+
         if(player.fuel < 0){
             reachDist(-1);
         }
+
         birdFlocks.forEach(function(bird){
             bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
             bird.update();
@@ -396,11 +420,23 @@ function update() {
                 player.toggleVision(false);
             }
         });
-        console.log("fuel:" + player.fuel);
-        console.log(player.x + " " + player.y);
+
+        if(!player.draggedByTornado && tornado.collides(player)) {
+            player.loseControl(true);
+            console.log("Player lost control!");
+        }
+        else if(player.draggedByTornado && !tornado.collides(player)) {
+            player.loseControl(false);
+            console.log("Player regained control!");
+        }
+
+        //console.log("fuel:" + player.fuel);
+        //console.log(player.x + " " + player.y);
+
         if(player.collides(endPointReal)){
             reachDist(currentLevel);
         }
+
         var dir = player.directionToDest();
         dirSignal.x = player.x-144;
         dirSignal.y = player.y-144;
@@ -412,7 +448,6 @@ function update() {
             showDir = false;
         }
     }
-
 }
 
 function advanceToLevel(level){
@@ -447,6 +482,9 @@ function draw() {
     });
 
     tornado.draw();
+
+    dragOverlay.context.clear();
+    fuelTank.draw();
 }
 
 function takeOffPlane() {
@@ -550,12 +588,12 @@ function setup(first) {
   birdFlocks = new Collection();
   var birdFlock = new Bird(1536, (world.height - 1536), 512, 512, 75, 1/4);
   var birdFlock2 = new Bird((world.height/2), (world.height/2), 512, 512, 100, 3/4);
-  var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 25, 2/4);
+  var birdFlock3 = new Bird((world.height/2 + 200), (world.height/2 - 100), 512, 512, 30, 1/4);
   birdFlocks.add(birdFlock);
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1664, 512, 512);
+  tornado = new Actor(2196, world.height-1792, 512, 512);
   tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
   {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
   useTimer: false});
@@ -574,6 +612,9 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
+  fuelTank = new FuelTank(0, 0, 400, 100);
+  dragOverlay = new Layer({relative: 'canvas'});
+  dragOverlay.positionOverCanvas();
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
@@ -599,3 +640,46 @@ function setup(first) {
     sndGameLevelFailed.autobuffer = true;    
     sndGameLevelFailed.load();
 }
+
+
+/**
+ * Draw a progress bar.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ *   A canvas graphics context onto which this progress bar should be drawn.
+ * @param {Number} x
+ *   The x-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} y
+ *   The y-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} w
+ *   The width of the progress bar.
+ * @param {Number} h
+ *   The height of the progress bar.
+ * @param {Number} pct
+ *   The fractional percent that the progress bar is complete.
+ * @param {String} doneColor
+ *   The CSS color of the completed portion of the progress bar.
+ * @param {String} [remainingColor='transparent']
+ *   The CSS color of the remaining portion of the progress bar.
+ * @param {String} [borderColor='black']
+ *   The CSS color of the border of the progress bar.
+ */
+function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
+    console.log("drawProgressBar left: " + pct);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = doneColor;
+    ctx.fillRect(x, y, w*pct, h);
+    ctx.fillStyle = remainingColor || 'transparent';
+    ctx.fillRect(x+w*pct, y, w, h*(1-pct));
+    ctx.strokeStyle = borderColor || 'black';
+    ctx.strokeRect(x, y, w, h);
+}
+
+var FuelTank = Box.extend({
+    progressBarColor: 'green',
+    drawDefault: function(ctx, x, y, w, h) {
+        console.log("fuel left: " + player.fuel/MAX_FUEL);
+        drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
+            this.progressBarColor, 'transparent', this.progressBarBorderColor);
+    }
+});
