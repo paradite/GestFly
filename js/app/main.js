@@ -38,7 +38,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
-        ROLL_FACTOR=0.2;
+        ROLL_FACTOR=0.15;
 
         if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle>0) {//right
@@ -59,9 +59,11 @@ Leap.loop({enableGestures: true}, function(frame) {
             //if (screenPosition[1]>0)
 
             zoom=-hand.screenPosition()[1];
-            if (zoom>400 || zoom<-200)
+            if (zoom>300 || zoom<-200)
             leapZoom(zoom);
             //console.log(zoom);
+            
+            if (hand.motion);
         }
     });
 
@@ -71,6 +73,9 @@ Leap.loop({enableGestures: true}, function(frame) {
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
+                    var circleProgress = gesture.progress;
+                    //var completeCircles = Math.floor(circleProgress);
+                    console.log(circleProgress);
                     //tmp=PLANE_MOVE_SPEED;
                     //PLANE_MOVE_SPEED=tmp;
                     var clockwise = false;
@@ -204,6 +209,18 @@ var Bird = Actor.extend({
 });
 
 /**
+ * Tornado
+ */
+var Tornado = Actor.extend({
+    active: true,
+    src: new SpriteMap('js/app/images/TornadoMap.png',
+    {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20, useTimer: false}),
+    init: function(x, y, sizeX, sizeY) {
+        this._super.call(this, x, y, sizeX, sizeY);
+    }
+});
+
+/**
  * Aeroplane
  */
 var Plane = Player.extend({
@@ -224,6 +241,7 @@ var Plane = Player.extend({
     orientation: 0,
     fuel: 0,
     vision: true,
+    draggedByTornado: false,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
@@ -259,11 +277,10 @@ var Plane = Player.extend({
             if(this.vision == true){
                 this.vision = false;
                 $("#blockage").show();
-                if(! ui.hasVisionPromptDisplayed){
+                if(! ui.hasVisionPromptDisplayed) {
                     ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
                     ui.hasVisionPromptDisplayed = true;
                 }
-
             }
         }
     },
@@ -274,6 +291,22 @@ var Plane = Player.extend({
         // angle in radians
         var angleRadians = Math.atan2(yDist, xDist);
         return angleRadians;
+    },
+    loseControl: function(bLostControl) {
+        if(bLostControl) {
+            this.draggedByTornado = true;
+
+            // Deactivate the tornado, prevent getting stuck in again
+            tornado.active = false;
+
+            // Slow down the plane's speed
+            PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
+
+            // Ask player to do something to get rid of the tornado
+        }
+        else {
+            this.draggedByTornado = false;
+        }
     }
 });
 
@@ -384,12 +417,19 @@ function update() {
 
     if(!App.isGameOver && takeoff){
         player.fuel -= 0.05;
+
+        if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
+            PLANE_MOVE_SPEED += 50;
+        }
+
         //Offset for the default orientation towards the right
         player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
         player.update();
+
         if(player.fuel < 0){
             reachDist(-1);
         }
+
         birdFlocks.forEach(function(bird){
             bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
             bird.update();
@@ -397,11 +437,23 @@ function update() {
                 player.toggleVision(false);
             }
         });
-        console.log("fuel:" + player.fuel);
-        console.log(player.x + " " + player.y);
+
+        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
+            player.loseControl(true);
+            console.log("Player lost control!");
+        }
+        else if(player.draggedByTornado && !tornado.collides(player)) {
+            player.loseControl(false);
+            console.log("Player regained control!");
+        }
+
+        //console.log("fuel:" + player.fuel);
+        //console.log(player.x + " " + player.y);
+
         if(player.collides(endPointReal)){
             reachDist(currentLevel);
         }
+
         var dir = player.directionToDest();
         dirSignal.x = player.x-144;
         dirSignal.y = player.y-144;
@@ -413,7 +465,6 @@ function update() {
             showDir = false;
         }
     }
-
 }
 
 function advanceToLevel(level){
@@ -559,10 +610,8 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1792, 512, 512);
-  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
-  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
-  useTimer: false});
+  // Create a tornado
+  tornado = new Tornado(2196, world.height-1792, 512, 512);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -586,7 +635,7 @@ function setup(first) {
 
   console.log(player.getVelocityVector());
 
-// Enable zooming, and display the zoom level indicator
+    // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
     aTimer.start();
 
