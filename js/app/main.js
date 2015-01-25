@@ -318,6 +318,8 @@ var Plane = Player.extend({
     },
     loseControl: function(bLostControl) {
         if(bLostControl) {
+            ui.displayPrompt("Move your hand in a circle","hand-o-up","circle");
+
             this.draggedByTornado = true;
 
             // Deactivate the tornado, prevent getting stuck in again
@@ -329,6 +331,7 @@ var Plane = Player.extend({
             // Ask player to do something to get rid of the tornado
         }
         else {
+            ui.hidePrompt();
             this.draggedByTornado = false;
         }
     }
