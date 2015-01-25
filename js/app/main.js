@@ -7,7 +7,7 @@ var currentLevel = 1,
     DIRECTION_LEFT = 1,
     DIRECTION_RIGHT = 2,
     UNIT = 30,
-    showZoomLevel = true,
+    showZoomLevel = false,
     lastZoom = App.physicsTimeElapsed,
     numScrollEvents=0,
     aTimer = new Timer(),
@@ -15,7 +15,8 @@ var currentLevel = 1,
     MAX_FUEL = 200,
     lastSwipe = 0,
     lastSwipeTime = 0,
-    score;
+    score,
+    allowLeapStart;
 
 var player,
     showDir = true,
@@ -390,6 +391,13 @@ function move(direction, turn_angle) {
     //console.log(player.orientation);
 }
 
+function startNewLevel(level) {
+    allowLeapStart = false;
+    setup(false);
+    console.log("finished set up for level " + level);
+    App.isGameOver = false;
+    startAnimating();
+}
 reachDist = function(level) {
     console.log("reach level " + level);
     if(level > 0){
@@ -423,7 +431,7 @@ reachDist = function(level) {
         sndGameLevelComplete.play();
     }
 
-    advanceToLevel(level + 1);
+    changeLevel(level + 1);
 
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
@@ -445,14 +453,12 @@ reachDist = function(level) {
         context.restore();
     }, 100);
     $canvas.css('cursor', 'pointer');
+    allowLeapStart = true;
     $canvas.one('click.gameover', function(e) {
         e.preventDefault();
         $canvas.css('cursor', 'auto');
         //App.reset();
-        setup(false);
-        console.log("finished set up for level " + level);
-        App.isGameOver = false;
-        startAnimating();
+        startNewLevel(level);
     });
 };
 
@@ -546,7 +552,7 @@ function update() {
     }
 }
 
-function advanceToLevel(level){
+function changeLevel(level){
     currentLevel = level;
     var $level = jQuery('#level .level').text(level);
 }
@@ -653,7 +659,7 @@ function setup(first) {
   // Change the size of the playable area. Do this before placing items!
   if(first) {
         //Level related
-      advanceToLevel(1);
+      changeLevel(1);
       score = 0;
       dragOverlay = new Layer({relative: 'canvas'});
       dragOverlay.positionOverCanvas();
