@@ -12,7 +12,9 @@ var currentLevel = 1,
     numScrollEvents=0,
     aTimer = new Timer(),
     swipeCount = 0,
-    MAX_FUEL = 200;
+    MAX_FUEL = 200,
+    lastSwipe = 0,
+    lastSwipeTime = 0;
 
 var player,
     showDir = true,
@@ -99,28 +101,43 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
-                    delta=aTimer.getDelta();
-                    if (delta>0.05 && delta<0.5) {
-                        console.log(delta);
+                    if (App.physicsTimeElapsed-lastSwipeTime>1000){
+                        lastSwipe=0;
+                        lastSwipeTime=App.physicsTimeElapsed;
+                    }
+                    else {
+                        //delta=aTimer.getDelta();
+                        //if (delta>0.05 && delta<0.5) {
+                        //  console.log(delta);
 
                         //Classify swipe as either horizontal or vertical
-                        var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+                        //var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
                         //Classify as right-left or up-down
-                        if (isHorizontal) {
+                        //if (isHorizontal) {
                             if (gesture.direction[0] > 0) {
                                 swipeDirection = "right";
+                                nowSwipe = DIRECTION_RIGHT;
                             } else {
                                 swipeDirection = "left";
+                                nowSwipe = DIRECTION_LEFT;
                             }
-                        } else { //vertical
-                            if (gesture.direction[1] > 0) {
-                                swipeDirection = "up";
-                            } else {
-                                swipeDirection = "down";
-                            }
-                        }
+                        //} else { //vertical
+                        //    if (gesture.direction[1] > 0) {
+                        //        swipeDirection = "up";
+                        //    } else {
+                        //        swipeDirection = "down";
+                        //    }
+                        //}
                         var duration = gesture.duration;
-                        console.log(swipeDirection+" "+duration);
+                        console.log(swipeDirection + " " + duration);
+                        if (nowSwipe!=lastSwipe){
+                            if (App.physicsTimeElapsed-lastSwipeTime<800){
+                                player.toggleVision(true);
+                            }
+                            lastSwipe=nowSwipe;
+                            lastSwipeTime=App.physicsTimeElapsed;
+                        }
+                        //}
                     }
                     break;
             }
