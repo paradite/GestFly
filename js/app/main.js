@@ -274,7 +274,7 @@ var Plane = Player.extend({
 });
 
 function move(direction, turn_angle) {
-    if(!takeoff){
+    if(!takeoff || !player.vision){
         return;
     }
     if(direction == DIRECTION_LEFT){
@@ -356,7 +356,7 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
