@@ -636,10 +636,8 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1792, 512, 512);
-  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
-  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
-  useTimer: false});
+  // Create a tornado
+  tornado = new Tornado(2196, world.height-1792, 512, 512);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
