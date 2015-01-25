@@ -212,6 +212,7 @@ var Bird = Actor.extend({
     BIRD_MOVE_SPEED: 0,
     CONTINUOUS_MOVEMENT: true,
     orientation: 0,
+    valid: true,
     src: new SpriteMap('js/app/images/BirdFlockMap.png',
         {stand:[0, 0, 0, 9]}, {frameW: 512, frameH: 512, interval: 40,
             useTimer: false}),
@@ -223,6 +224,7 @@ var Bird = Actor.extend({
         this.updateOrientaion(orientaion);
         this.BIRD_MOVE_SPEED = speed;
         this._super.call(this, x, y, sizex, sizey);
+        this.valid = true;
     }
 });
 
@@ -455,8 +457,9 @@ function update() {
         birdFlocks.forEach(function(bird){
             bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
             bird.update();
-            if(bird.collides(player)){
+            if(bird.valid && bird.collides(player)){
                 player.toggleVision(false);
+                bird.valid = false;
             }
         });
 
@@ -634,10 +637,8 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1792, 512, 512);
-  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
-  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
-  useTimer: false});
+  // Create a tornado
+  tornado = new Tornado(2196, world.height-1792, 512, 512);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -653,7 +654,7 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
-  fuelTank = new FuelTank(0, 0, 400, 100);
+  fuelTank = new FuelTank(0, 56, 130, 400);
   dragOverlay = new Layer({relative: 'canvas'});
   dragOverlay.positionOverCanvas();
   // Set velocity vector for player
@@ -707,11 +708,12 @@ function setup(first) {
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
     console.log("drawProgressBar left: " + pct);
+    pct = 1 - pct;
     ctx.lineWidth = 1;
     ctx.fillStyle = doneColor;
-    ctx.fillRect(x, y, w*pct, h);
+    ctx.fillRect(x, y+h*pct, w, h*(1-pct));
     ctx.fillStyle = remainingColor || 'transparent';
-    ctx.fillRect(x+w*pct, y, w, h*(1-pct));
+    ctx.fillRect(x, y, w, h*pct);
     ctx.strokeStyle = borderColor || 'black';
     ctx.strokeRect(x, y, w, h);
 }
@@ -721,6 +723,6 @@ var FuelTank = Box.extend({
     drawDefault: function(ctx, x, y, w, h) {
         console.log("fuel left: " + player.fuel/MAX_FUEL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
-            this.progressBarColor, 'transparent', this.progressBarBorderColor);
+            this.progressBarColor, 'black', this.progressBarBorderColor);
     }
 });
