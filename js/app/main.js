@@ -403,13 +403,19 @@ function startNewLevel(level) {
     App.isGameOver = false;
     startAnimating();
 }
-function displayHighscore(data, textStatus, jqXHR) {
-    console.log(data);
+function displayHighscore(data, textStatus, jqXHR) {console.log(data);
     $.get("http://highscoreserver.herokuapp.com/api/entries", function (data) {
+        data = data.slice(1,8);
+        var elem = $('#highScore ul');
+        elem.empty();
+
         data.forEach(function(entry){
-            console.log(entry.name);
-            console.log(entry.score);
+            var html = '<li><span class="leftLabel">' + entry.name + '</span><span class="rightLabel">' + entry.score + '</span></li>';
+
+            elem.append(html);
         })
+
+        ui.displayHighScore();
     });
 }
 reachDist = function(level) {
@@ -715,6 +721,8 @@ function setup(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
     takeoff = false;
     PLANE_MOVE_SPEED = 0;
+
+  $('#highScore').hide();
 
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
