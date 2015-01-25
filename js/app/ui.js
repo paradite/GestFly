@@ -29,14 +29,15 @@ var ui = (function(window, $){
     }
 
     // Displays the blockage
-    function displayBlockage()
+    function displayHighScore()
     {
-
+        $('#highScore').show();
     }
 
     return {
         displayPrompt: displayPrompt,
         hidePrompt: hidePrompt,
         hasVisionPromptDisplayed: hasVisionPromptDisplayed,
+        displayHighScore: displayHighScore
     };
 })(window, $);
