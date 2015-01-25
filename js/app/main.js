@@ -51,6 +51,10 @@ Leap.loop({enableGestures: true}, function(frame) {
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
                 else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+                else if (activeThunderstorm){
+                    activeThunderstormCounter--;
+                    if (activeThunderstormCounter<=0) player.withinThunderstorm(false);
+                }
             }
             else
                 if (rotationalAngle<MAX_ROTATIONAL_ANGLE)
@@ -68,7 +72,6 @@ Leap.loop({enableGestures: true}, function(frame) {
             leapZoom(zoom);
             //console.log(zoom);
             
-            if (hand.motion);
         }
     });
 
@@ -169,6 +172,7 @@ var birdFlocks;
 var tornado;
 var storms;
 var activeThunderstorm = false;
+var activeThunderstormCounter=0;
 
 var gameBgMusic;
 var sndGameLevelComplete, sndGameLevelFailed;
@@ -357,12 +361,14 @@ var Plane = Player.extend({
         if(bInThunderstorm) {
             activeThunderstorm = true;
             console.log("IN THUNDERSTORM!!!!");
-
+            activeThunderstormCounter=20;
             // Ask player to do something to get rid of the storm
             // ...
         }
         else {
+            activeThunderstormCounter=0;
             activeThunderstorm = false;
+            console.log("OUT OF THUNDERSTORM!!!!");
         }
     }
 });
@@ -540,13 +546,21 @@ function update() {
             console.log("Player regained control!");
         }
 
+        var inSomeThunderstorm = false;
         storms.forEach(function(storm) {
             if(storm.active && storm.collides(player) && !activeThunderstorm) {
                 storm.active = false;
                 player.withinThunderstorm(true);
                 console.log("Within thunderstorm!");
             }
+            if(storm.collides(player)) {
+                inSomeThunderstorm = true;
+            }
         });
+
+        if(activeThunderstorm && !inSomeThunderstorm) {
+            player.withinThunderstorm(false);
+        }
 
         //console.log("fuel:" + player.fuel);
         //console.log(player.x + " " + player.y);
@@ -719,9 +733,13 @@ function setup(first) {
   // Create storms
   var storm1 = new Storm(world.width - 1200, 1200, 256, 256);
   var storm2 = new Storm(world.width - 1600, 1800, 256, 256);
+  var storm3 = new Storm(world.width - 2000, 1000, 256, 256);
+  var storm4 = new Storm(world.width - 1000, 2200, 256, 256);
   storms = new Collection();
   storms.add(storm1);
   storms.add(storm2);
+  storms.add(storm3);
+  storms.add(storm4);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
