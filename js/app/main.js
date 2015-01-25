@@ -392,6 +392,15 @@ function startNewLevel(level) {
     App.isGameOver = false;
     startAnimating();
 }
+function displayHighscore(data, textStatus, jqXHR) {
+    console.log(data);
+    $.get("http://highscoreserver.herokuapp.com/api/entries", function (data) {
+        data.forEach(function(entry){
+            console.log(entry.name);
+            console.log(entry.score);
+        })
+    });
+}
 reachDist = function(level) {
     console.log("reach level " + level);
     if(level > 0){
@@ -413,11 +422,24 @@ reachDist = function(level) {
         text = "Failed!"; // What is this for?
     }
     else if(level == -1) {
-        text = "You ran out of fuel!";
-        level = 0;
-
         // Play 'level failed' sound
         sndGameLevelFailed.play();
+        text = "You ran out of fuel!";
+        text2 = "Final score: " + score;
+        level = 0;
+        var person = prompt("Please enter your name", "ZZZ");
+        var a = {name: person,score:score};
+        if (person != null) {
+            $.ajax({
+                type: "POST",
+                url: "http://highscoreserver.herokuapp.com/api/entries",
+                data: a,
+                success: displayHighscore,
+                dataType: 'json'
+            });
+        }
+
+
     }
     else {
         // Made it to next level
@@ -661,12 +683,6 @@ function setup(first) {
     world.resize(1024 * mapWidth, 1024 * mapHeight);
     takeoff = false;
     PLANE_MOVE_SPEED = 0;
-
-    $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
-        console.log(data[0].name);
-        console.log(data[0].score);
-    });
-
 
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
