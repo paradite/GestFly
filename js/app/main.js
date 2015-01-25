@@ -784,7 +784,7 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
-  fuelTank = new FuelTank(0, 56, 130, 400);
+  fuelTank = new FuelTank(40, 76, 60, 400);
 
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
@@ -836,22 +836,32 @@ function setup(first) {
  *   The CSS color of the border of the progress bar.
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
-    //console.log("drawProgressBar left: " + pct);
     pct = 1 - pct;
+    var radius = 10;
+
     ctx.lineWidth = 1;
-    ctx.fillStyle = doneColor;
-    ctx.fillRect(x, y+h*pct, w, h*(1-pct));
+
+    // Draw Empty Gauge
     ctx.fillStyle = remainingColor || 'transparent';
-    ctx.fillRect(x, y, w, h*pct);
     ctx.strokeStyle = borderColor || 'black';
-    ctx.strokeRect(x, y, w, h);
+
+    utilities.drawRoundRect(ctx,x,y,w,h,radius,true,true);
+
+    // Draw Remaining Fuel
+    ctx.fillStyle = doneColor;
+    if(h*pct < radius){
+        utilities.drawRoundRect(ctx,x,y+h*pct,w,h*(1-pct),radius,true,true);
+    }else{
+        utilities.drawTopHalfRoundRect(ctx,x,y+h*pct,w,h*(1-pct),radius,true,true);
+    }
 }
 
 var FuelTank = Box.extend({
-    progressBarColor: 'green',
+    progressBarColor: '#D76930',
     drawDefault: function(ctx, x, y, w, h) {
-        //console.log("fuel left: " + player.fuel/MAX_FUEL);
+        console.log("fuel left: " + player.fuel/MAX_FUEL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
-            this.progressBarColor, 'black', this.progressBarBorderColor);
+            this.progressBarColor, 'rgba(0,0,0,0.5);', this.progressBarBorderColor);
     }
 });
+
