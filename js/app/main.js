@@ -34,7 +34,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
-        ROLL_FACTOR=0.2;
+        ROLL_FACTOR=0.15;
 
         if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle>0) {//right
@@ -55,9 +55,11 @@ Leap.loop({enableGestures: true}, function(frame) {
             //if (screenPosition[1]>0)
 
             zoom=-hand.screenPosition()[1];
-            if (zoom>400 || zoom<-200)
+            if (zoom>300 || zoom<-200)
             leapZoom(zoom);
             //console.log(zoom);
+            
+            if (hand.motion);
         }
     });
 
@@ -67,6 +69,9 @@ Leap.loop({enableGestures: true}, function(frame) {
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
+                    var circleProgress = gesture.progress;
+                    //var completeCircles = Math.floor(circleProgress);
+                    console.log(circleProgress);
                     //tmp=PLANE_MOVE_SPEED;
                     //PLANE_MOVE_SPEED=tmp;
                     var clockwise = false;
