@@ -50,6 +50,10 @@ Leap.loop({enableGestures: true}, function(frame) {
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
                 else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+                else if (activeThunderstorm){
+                    activeThunderstormCounter--;
+                    if (activeThunderstormCounter<=0) player.withinThunderstorm(false);
+                }
             }
             else
                 if (rotationalAngle<MAX_ROTATIONAL_ANGLE)
@@ -67,7 +71,6 @@ Leap.loop({enableGestures: true}, function(frame) {
             leapZoom(zoom);
             //console.log(zoom);
             
-            if (hand.motion);
         }
     });
 
@@ -168,6 +171,7 @@ var birdFlocks;
 var tornado;
 var storms;
 var activeThunderstorm = false;
+var activeThunderstormCounter=0;
 
 var gameBgMusic;
 var sndGameLevelComplete, sndGameLevelFailed;
@@ -356,12 +360,14 @@ var Plane = Player.extend({
         if(bInThunderstorm) {
             activeThunderstorm = true;
             console.log("IN THUNDERSTORM!!!!");
-
+            activeThunderstormCounter=20;
             // Ask player to do something to get rid of the storm
             // ...
         }
         else {
+            activeThunderstormCounter=0;
             activeThunderstorm = false;
+            console.log("OUT OF THUNDERSTORM!!!!");
         }
     }
 });
