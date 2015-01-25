@@ -43,7 +43,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
-        ROLL_FACTOR=0.15;
+        ROLL_FACTOR=0.125;
 
         if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle>0) {//right
@@ -67,9 +67,11 @@ Leap.loop({enableGestures: true}, function(frame) {
 
             //if (screenPosition[1]>0)
 
-//            zoom=-hand.screenPosition()[1];
-//            if (zoom>300 || zoom<-200)
-//            leapZoom(zoom);
+            zoom=-hand.screenPosition()[1];
+            if (zoom>300)// || zoom<-200)
+                if (!takeoff )
+                    takeOffPlane();
+            //leapZoom(zoom);
             //console.log(zoom);
             
         }
