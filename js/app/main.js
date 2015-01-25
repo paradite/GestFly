@@ -203,6 +203,18 @@ var Bird = Actor.extend({
 });
 
 /**
+ * Tornado
+ */
+var Tornado = Actor.extend({
+    active: true,
+    src: new SpriteMap('js/app/images/TornadoMap.png',
+    {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20, useTimer: false}),
+    init: function(x, y, sizeX, sizeY) {
+        this._super.call(this, x, y, sizeX, sizeY);
+    }
+});
+
+/**
  * Aeroplane
  */
 var Plane = Player.extend({
@@ -259,11 +271,10 @@ var Plane = Player.extend({
             if(this.vision == true){
                 this.vision = false;
                 $("#blockage").show();
-                if(! ui.hasVisionPromptDisplayed){
+                if(! ui.hasVisionPromptDisplayed) {
                     ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
                     ui.hasVisionPromptDisplayed = true;
                 }
-
             }
         }
     },
@@ -278,6 +289,9 @@ var Plane = Player.extend({
     loseControl: function(bLostControl) {
         if(bLostControl) {
             this.draggedByTornado = true;
+
+            // Deactivate the tornado, prevent getting stuck in again
+            tornado.active = false;
 
             // Slow down the plane's speed
             PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
@@ -416,7 +430,7 @@ function update() {
             }
         });
 
-        if(!player.draggedByTornado && tornado.collides(player)) {
+        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
             player.loseControl(true);
             console.log("Player lost control!");
         }
@@ -588,10 +602,8 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  tornado = new Actor(2196, world.height-1792, 512, 512);
-  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
-  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
-  useTimer: false});
+  // Create a tornado
+  tornado = new Tornado(2196, world.height-1792, 512, 512);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -615,7 +627,7 @@ function setup(first) {
 
   console.log(player.getVelocityVector());
 
-// Enable zooming, and display the zoom level indicator
+    // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
     aTimer.start();
 
