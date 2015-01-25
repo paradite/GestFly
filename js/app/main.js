@@ -446,6 +446,7 @@ function draw() {
 
     tornado.draw();
 
+    dragOverlay.context.clear();
     feulTank.draw();
 }
 
@@ -627,6 +628,7 @@ function setup(first) {
  *   The CSS color of the border of the progress bar.
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
+    console.log("drawProgressBar left: " + pct);
     ctx.lineWidth = 1;
     ctx.fillStyle = doneColor;
     ctx.fillRect(x, y, w*pct, h);
@@ -639,7 +641,7 @@ function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, border
 var FeulTank = Box.extend({
     progressBarColor: 'green',
     drawDefault: function(ctx, x, y, w, h) {
-        console.log("feul: " + x+" " + y);
+        console.log("feul left: " + player.fuel/MAX_FEUL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FEUL,
             this.progressBarColor, 'transparent', this.progressBarBorderColor);
     }
