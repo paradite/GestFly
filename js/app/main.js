@@ -359,8 +359,10 @@ var Plane = Player.extend({
     },
     withinThunderstorm: function(bInThunderstorm) {
         if(bInThunderstorm) {
-            ui.displayPrompt("Keep your hand steady in the thunderstrom","hand-o-up","circle");
+            ui.displayPrompt("Keep your hand steady in the thunderstrom",null,"circle");
             activeThunderstorm = true;
+            PLANE_MOVE_SPEED = DEFAULT_SPEED / 5;
+            ANGLE_FACTOR = 0.25;
             console.log("IN THUNDERSTORM!!!!");
             activeThunderstormCounter=20;
             // Ask player to do something to get rid of the storm
@@ -368,6 +370,7 @@ var Plane = Player.extend({
         }
         else {
             ui.hidePrompt();
+            ANGLE_FACTOR = 0.1;
             activeThunderstormCounter=0;
             activeThunderstorm = false;
             console.log("OUT OF THUNDERSTORM!!!!");
@@ -518,7 +521,7 @@ function update() {
     if(!App.isGameOver && takeoff){
         player.fuel -= 0.025 + 0.025 * currentLevel;
 
-        if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
+        if(!player.draggedByTornado && !activeThunderstorm && PLANE_MOVE_SPEED < DEFAULT_SPEED) {
             PLANE_MOVE_SPEED += 2;
         }
 
