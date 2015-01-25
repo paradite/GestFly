@@ -2,7 +2,7 @@
 var currentLevel = 1,
     PLANE_MOVE_SPEED = 0,
     BIRD_MOVE_SPEED = 50,
-    DEFAULT_SPEED = 800,
+    DEFAULT_SPEED = 500,
     ANGLE_FACTOR = 0.1,
     DIRECTION_LEFT = 1,
     DIRECTION_RIGHT = 2,
