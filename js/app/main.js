@@ -1,23 +1,26 @@
 // Constants
-var currentLevel = 1;
-    PLANE_MOVE_SPEED = 0;
-    BIRD_MOVE_SPEED = 50;
-    DEFAULT_SPEED = 500;
-    ANGLE_FACTOR = 0.1;
-    DIRECTION_LEFT = 1;
-    DIRECTION_RIGHT = 2;
-    UNIT = 30;
-    showZoomLevel = true;
-    lastZoom = App.physicsTimeElapsed;
-    numScrollEvents=0;
-    aTimer = new Timer();
-    swipeCount = 0;
+var currentLevel = 1,
+    PLANE_MOVE_SPEED = 0,
+    BIRD_MOVE_SPEED = 50,
+    DEFAULT_SPEED = 500,
+    ANGLE_FACTOR = 0.1,
+    DIRECTION_LEFT = 1,
+    DIRECTION_RIGHT = 2,
+    UNIT = 30,
+    showZoomLevel = true,
+    lastZoom = App.physicsTimeElapsed,
+    numScrollEvents=0,
+    aTimer = new Timer(),
+    swipeCount = 0,
+    MAX_FUEL = 200;
 
 var player,
     showDir = true,
     dirSignal,
     inProcess=false,
-    takeoff = false;
+    takeoff = false,
+    fuelTank,
+    dragOverlay;
 
 // Controls
 var keysCustom = {
@@ -218,7 +221,7 @@ var Plane = Player.extend({
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
-    fuel: 200,
+    fuel: 0,
     vision: true,
     draggedByTornado: false,
     init: function(team, x, y) {
@@ -226,7 +229,7 @@ var Plane = Player.extend({
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
-        this.fuel = 200;
+        this.fuel = MAX_FUEL;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -288,7 +291,7 @@ var Plane = Player.extend({
 });
 
 function move(direction, turn_angle) {
-    if(!takeoff){
+    if(!takeoff || !player.vision){
         return;
     }
     if(direction == DIRECTION_LEFT){
@@ -370,7 +373,7 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -474,6 +477,9 @@ function draw() {
     });
 
     tornado.draw();
+
+    dragOverlay.context.clear();
+    fuelTank.draw();
 }
 
 function takeOffPlane() {
@@ -601,6 +607,9 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
+  fuelTank = new FuelTank(0, 0, 400, 100);
+  dragOverlay = new Layer({relative: 'canvas'});
+  dragOverlay.positionOverCanvas();
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
@@ -626,3 +635,46 @@ function setup(first) {
     sndGameLevelFailed.autobuffer = true;    
     sndGameLevelFailed.load();
 }
+
+
+/**
+ * Draw a progress bar.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ *   A canvas graphics context onto which this progress bar should be drawn.
+ * @param {Number} x
+ *   The x-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} y
+ *   The y-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} w
+ *   The width of the progress bar.
+ * @param {Number} h
+ *   The height of the progress bar.
+ * @param {Number} pct
+ *   The fractional percent that the progress bar is complete.
+ * @param {String} doneColor
+ *   The CSS color of the completed portion of the progress bar.
+ * @param {String} [remainingColor='transparent']
+ *   The CSS color of the remaining portion of the progress bar.
+ * @param {String} [borderColor='black']
+ *   The CSS color of the border of the progress bar.
+ */
+function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
+    console.log("drawProgressBar left: " + pct);
+    ctx.lineWidth = 1;
+    ctx.fillStyle = doneColor;
+    ctx.fillRect(x, y, w*pct, h);
+    ctx.fillStyle = remainingColor || 'transparent';
+    ctx.fillRect(x+w*pct, y, w, h*(1-pct));
+    ctx.strokeStyle = borderColor || 'black';
+    ctx.strokeRect(x, y, w, h);
+}
+
+var FuelTank = Box.extend({
+    progressBarColor: 'green',
+    drawDefault: function(ctx, x, y, w, h) {
+        console.log("fuel left: " + player.fuel/MAX_FUEL);
+        drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
+            this.progressBarColor, 'transparent', this.progressBarBorderColor);
+    }
+});
