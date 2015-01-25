@@ -43,7 +43,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
-        ROLL_FACTOR=0.125;
+        ROLL_FACTOR=0.11;
 
         if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle>0) {//right
