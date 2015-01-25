@@ -67,9 +67,9 @@ Leap.loop({enableGestures: true}, function(frame) {
 
             //if (screenPosition[1]>0)
 
-            zoom=-hand.screenPosition()[1];
-            if (zoom>300 || zoom<-200)
-            leapZoom(zoom);
+//            zoom=-hand.screenPosition()[1];
+//            if (zoom>300 || zoom<-200)
+//            leapZoom(zoom);
             //console.log(zoom);
             
         }
@@ -109,6 +109,7 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
+                    if (allowLeapStart) startNewLevel(1);
                     if (App.physicsTimeElapsed-lastSwipeTime>1000){
                         lastSwipe=0;
                         lastSwipeTime=App.physicsTimeElapsed;
