@@ -1,23 +1,26 @@
 // Constants
-var currentLevel = 1;
-    PLANE_MOVE_SPEED = 0;
-    BIRD_MOVE_SPEED = 50;
-    DEFAULT_SPEED = 500;
-    ANGLE_FACTOR = 0.1;
-    DIRECTION_LEFT = 1;
-    DIRECTION_RIGHT = 2;
-    UNIT = 30;
-    showZoomLevel = true;
-    lastZoom = App.physicsTimeElapsed;
-    numScrollEvents=0;
-    aTimer = new Timer();
-    swipeCount = 0;
+var currentLevel = 1,
+    PLANE_MOVE_SPEED = 0,
+    BIRD_MOVE_SPEED = 50,
+    DEFAULT_SPEED = 500,
+    ANGLE_FACTOR = 0.1,
+    DIRECTION_LEFT = 1,
+    DIRECTION_RIGHT = 2,
+    UNIT = 30,
+    showZoomLevel = true,
+    lastZoom = App.physicsTimeElapsed,
+    numScrollEvents=0,
+    aTimer = new Timer(),
+    swipeCount = 0,
+    MAX_FEUL = 200;
 
 var player,
     showDir = true,
     dirSignal,
     inProcess=false,
-    takeoff = false;
+    takeoff = false,
+    feulTank,
+    dragOverlay;
 
 // Controls
 var keysCustom = {
@@ -218,14 +221,14 @@ var Plane = Player.extend({
     lastShot: 0,
     //Orientation of the plane, to be multiplied to PI
     orientation: 0,
-    fuel: 200,
+    fuel: 0,
     vision: true,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
-        this.fuel = 200;
+        this.fuel = MAX_FEUL;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -442,6 +445,8 @@ function draw() {
     });
 
     tornado.draw();
+
+    feulTank.draw();
 }
 
 function takeOffPlane() {
@@ -569,6 +574,9 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
+  feulTank = new FeulTank(0, 0, 400, 100);
+  dragOverlay = new Layer({relative: 'canvas'});
+  dragOverlay.positionOverCanvas();
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
@@ -594,3 +602,45 @@ function setup(first) {
     sndGameLevelFailed.autobuffer = true;    
     sndGameLevelFailed.load();
 }
+
+
+/**
+ * Draw a progress bar.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ *   A canvas graphics context onto which this progress bar should be drawn.
+ * @param {Number} x
+ *   The x-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} y
+ *   The y-coordinate of the upper-left corner of the progress bar.
+ * @param {Number} w
+ *   The width of the progress bar.
+ * @param {Number} h
+ *   The height of the progress bar.
+ * @param {Number} pct
+ *   The fractional percent that the progress bar is complete.
+ * @param {String} doneColor
+ *   The CSS color of the completed portion of the progress bar.
+ * @param {String} [remainingColor='transparent']
+ *   The CSS color of the remaining portion of the progress bar.
+ * @param {String} [borderColor='black']
+ *   The CSS color of the border of the progress bar.
+ */
+function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
+    ctx.lineWidth = 1;
+    ctx.fillStyle = doneColor;
+    ctx.fillRect(x, y, w*pct, h);
+    ctx.fillStyle = remainingColor || 'transparent';
+    ctx.fillRect(x+w*pct, y, w*(1-pct), h);
+    ctx.strokeStyle = borderColor || 'black';
+    ctx.strokeRect(x, y, w, h);
+}
+
+var FeulTank = Box.extend({
+    progressBarColor: 'green',
+    drawDefault: function(ctx, x, y, w, h) {
+        console.log("feul: " + x+" " + y);
+        drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FEUL,
+            this.progressBarColor, 'transparent', this.progressBarBorderColor);
+    }
+});
