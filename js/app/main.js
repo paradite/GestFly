@@ -406,7 +406,7 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
         //TODO: Also create correspond methods for circling the tornado
         player.toggleVision(true);
     }else if(e.keyPressed == keysCustom.escape[1]){
-        player.toggleVision(true);
+        player.loseControl(false);
     }
 });
 
@@ -419,7 +419,7 @@ function update() {
         player.fuel -= 0.05;
 
         if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
-            PLANE_MOVE_SPEED += 50;
+            PLANE_MOVE_SPEED += 2;
         }
 
         //Offset for the default orientation towards the right
