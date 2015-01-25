@@ -4,7 +4,7 @@ var game = (function(window, $){
         birdShit;
 
     function createBirdShit(height,width){
-        birdShit = new Box(width / 5.5, 0, height * 1, height * 1);
+        birdShit = new Box((width/2)-(height/2), 0, height, height);
         birdShit.src = "js/app/images/BirdShit.png";
     }
 

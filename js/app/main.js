@@ -2,7 +2,7 @@
 var currentLevel = 1,
     PLANE_MOVE_SPEED = 0,
     BIRD_MOVE_SPEED = 50,
-    DEFAULT_SPEED = 500,
+    DEFAULT_SPEED = 800,
     ANGLE_FACTOR = 0.1,
     DIRECTION_LEFT = 1,
     DIRECTION_RIGHT = 2,
@@ -14,7 +14,8 @@ var currentLevel = 1,
     swipeCount = 0,
     MAX_FUEL = 200,
     lastSwipe = 0,
-    lastSwipeTime = 0;
+    lastSwipeTime = 0,
+    score;
 
 var player,
     showDir = true,
@@ -56,8 +57,8 @@ Leap.loop({enableGestures: true}, function(frame) {
                 else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
 
-            if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
-            else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+            //if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>1*hand.pitch()) PLANE_MOVE_SPEED-=1*hand.pitch(); //lift the tip of the hand to slow down
+            //else if (hand.pitch()<-0.2 && PLANE_MOVE_SPEED<DEFAULT_SPEED) PLANE_MOVE_SPEED-=1.1*hand.pitch();
 
             //if (screenPosition[1]>0)
 
@@ -76,7 +77,7 @@ Leap.loop({enableGestures: true}, function(frame) {
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
-                    var circleProgress = gesture.progress;
+                    /*var circleProgress = gesture.progress;
                     //var completeCircles = Math.floor(circleProgress);
                     console.log(circleProgress);
                     //tmp=PLANE_MOVE_SPEED;
@@ -91,7 +92,8 @@ Leap.loop({enableGestures: true}, function(frame) {
                             move(DIRECTION_RIGHT, ANGLE_FACTOR/160);
                         else move(DIRECTION_LEFT, ANGLE_FACTOR/160);
                         //update();
-                    }
+                    }*/
+                    player.loseControl(false)
                     inProcess=false;
                     //PLANE_MOVE_SPEED=tmp;
                     break;
@@ -333,6 +335,8 @@ var Plane = Player.extend({
     },
     loseControl: function(bLostControl) {
         if(bLostControl) {
+            ui.displayPrompt("Move your hand in a circle","hand-o-up","circle");
+
             this.draggedByTornado = true;
 
             // Deactivate the tornado, prevent getting stuck in again
@@ -344,6 +348,7 @@ var Plane = Player.extend({
             // Ask player to do something to get rid of the tornado
         }
         else {
+            ui.hidePrompt();
             this.draggedByTornado = false;
         }
     },
@@ -381,7 +386,9 @@ function move(direction, turn_angle) {
 
 reachDist = function(level) {
     console.log("reach level " + level);
-
+    if(level > 0){
+        score += currentLevel * player.fuel.round();
+    }
     App.isGameOver = true;
     stopAnimating();
     gameBgMusic.pause();
@@ -392,7 +399,8 @@ reachDist = function(level) {
     }
 
     var text = "Level " + level + " completed!";
-
+    var text2 = "Current score: " + score;
+    console.log(text);
     if(level == 0) {
         text = "Failed!"; // What is this for?
     }
@@ -414,9 +422,9 @@ reachDist = function(level) {
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
         context.save();
-        context.font = '100px Arial';
+        context.font = '80px Arial';
         context.fillStyle = 'black';
-        context.strokeStyle = 'lightGray';
+        context.strokeStyle = 'white';
         context.textBaseline = 'middle';
         context.textAlign = 'center';
         context.shadowColor = 'black';
@@ -424,8 +432,10 @@ reachDist = function(level) {
         context.lineWidth = 5;
         var x = Math.round(world.xOffset+canvas.width/2);
         var y = Math.round(world.yOffset+canvas.height/2);
-        context.strokeText(text, x, y);
-        context.fillText(text, x, y);
+        context.strokeText(text, x, y-100);
+        context.strokeText(text2, x, y+100);
+        context.fillText(text, x, y-100);
+        context.fillText(text2, x, y+100);
         context.restore();
     }, 100);
     $canvas.css('cursor', 'pointer');
@@ -470,7 +480,7 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
 function update() {
 
     if(!App.isGameOver && takeoff){
-        player.fuel -= 0.05;
+        player.fuel -= 0.025 + 0.025 * currentLevel;
 
         if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
             PLANE_MOVE_SPEED += 2;
@@ -554,7 +564,7 @@ function draw() {
   //endPointReal.draw();
 
 	player.draw();
-    if(showDir){
+    if(takeoff && showDir){
         dirSignal.draw();
     }
     birdFlocks.forEach(function(bird){
@@ -638,6 +648,9 @@ function setup(first) {
   if(first) {
         //Level related
       advanceToLevel(1);
+      score = 0;
+      dragOverlay = new Layer({relative: 'canvas'});
+      dragOverlay.positionOverCanvas();
   }
     world.resize(1024 * mapWidth, 1024 * mapHeight);
     takeoff = false;
@@ -703,8 +716,7 @@ function setup(first) {
   useTimer: false});
 
   fuelTank = new FuelTank(0, 56, 130, 400);
-  dragOverlay = new Layer({relative: 'canvas'});
-  dragOverlay.positionOverCanvas();
+
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
