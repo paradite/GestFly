@@ -29,7 +29,8 @@ var keysCustom = {
   left: ['left', 'a'],
   right: ['right', 'd'],
   takeoff: ['takeoff', 't'],
-  vision: ['vision', 'v']
+  vision: ['vision', 'v'],
+  escape: ['escape', 'e']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -359,7 +360,7 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision, keysCustom.escape).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -370,6 +371,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
     }else if(e.keyPressed == keysCustom.vision[1]){
         //TODO: Yiyang, use this method for clearing the vision
         //TODO: Also create correspond methods for circling the tornado
+        player.toggleVision(true);
+    }else if(e.keyPressed == keysCustom.escape[1]){
         player.toggleVision(true);
     }
 });
