@@ -170,7 +170,7 @@ var startPoint, endPoint;
 var endPointReal;
 
 var birdFlocks;
-var tornado;
+var tornados;
 var storms;
 var activeThunderstorm = false;
 var activeThunderstormCounter=0;
@@ -538,14 +538,16 @@ function update() {
             }
         });
 
-        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
-            player.loseControl(true);
-            console.log("Player lost control!");
-        }
-        else if(player.draggedByTornado && !tornado.collides(player)) {
-            player.loseControl(false);
-            console.log("Player regained control!");
-        }
+        tornados.forEach(function(tornado) {
+            if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
+                player.loseControl(true);
+                console.log("Player lost control!");
+            }
+            else if(player.draggedByTornado && !tornado.collides(player)) {
+                player.loseControl(false);
+                console.log("Player regained control!");
+            }
+        });
 
         var inSomeThunderstorm = false;
         storms.forEach(function(storm) {
@@ -614,7 +616,10 @@ function draw() {
         bird.draw();
     });
 
-    tornado.draw();
+    tornados.forEach(function(tornado){
+        tornado.draw();
+    });
+
     storms.forEach(function(storm){
         storm.draw();
     });
@@ -728,8 +733,19 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
+    tornados = new Collection();
+
   // Create a tornado
-  tornado = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado1 = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado2;
+
+  tornados.add(tornado1);
+    
+    if(currentLevel == 2){
+        tornado2= new Tornado(startPoint.xC() + 500, startPoint.yC() -500, 512, 512);
+        tornados.add(tornado2);
+    }
+
 
   // Create storms
   var storm1 = new Storm(world.width - 1200, 1200, 256, 256);
