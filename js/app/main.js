@@ -7,14 +7,16 @@ var currentLevel = 1,
     DIRECTION_LEFT = 1,
     DIRECTION_RIGHT = 2,
     UNIT = 30,
-    showZoomLevel = true,
+    showZoomLevel = false,
     lastZoom = App.physicsTimeElapsed,
     numScrollEvents=0,
     aTimer = new Timer(),
     swipeCount = 0,
     MAX_FUEL = 200,
     lastSwipe = 0,
-    lastSwipeTime = 0;
+    lastSwipeTime = 0,
+    score,
+    allowLeapStart;
 
 var player,
     showDir = true,
@@ -32,7 +34,8 @@ var keysCustom = {
   right: ['right', 'd'],
   takeoff: ['takeoff', 't'],
   vision: ['vision', 'v'],
-  escape: ['escape', 'e']
+  escape: ['escape', 'e'],
+  balance: ['balance', 'b']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -48,6 +51,10 @@ Leap.loop({enableGestures: true}, function(frame) {
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*MAX_ROTATIONAL_ANGLE*MAX_ROTATIONAL_ANGLE*ROLL_FACTOR);
                 else if (rotationalAngle>MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_RIGHT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
+                else if (activeThunderstorm){
+                    activeThunderstormCounter--;
+                    if (activeThunderstormCounter<=0) player.withinThunderstorm(false);
+                }
             }
             else
                 if (rotationalAngle<MAX_ROTATIONAL_ANGLE)
@@ -60,12 +67,11 @@ Leap.loop({enableGestures: true}, function(frame) {
 
             //if (screenPosition[1]>0)
 
-            zoom=-hand.screenPosition()[1];
-            if (zoom>300 || zoom<-200)
-            leapZoom(zoom);
+//            zoom=-hand.screenPosition()[1];
+//            if (zoom>300 || zoom<-200)
+//            leapZoom(zoom);
             //console.log(zoom);
             
-            if (hand.motion);
         }
     });
 
@@ -103,6 +109,7 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
+                    if (allowLeapStart) startNewLevel(1);
                     if (App.physicsTimeElapsed-lastSwipeTime>1000){
                         lastSwipe=0;
                         lastSwipeTime=App.physicsTimeElapsed;
@@ -163,7 +170,10 @@ var startPoint, endPoint;
 var endPointReal;
 
 var birdFlocks;
-var tornado;
+var tornados;
+var storms;
+var activeThunderstorm = false;
+var activeThunderstormCounter=0;
 
 var gameBgMusic;
 var sndGameLevelComplete, sndGameLevelFailed;
@@ -175,7 +185,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/endPoint.png',
                     'js/app/images/planeArrowMap.png',
                     'js/app/images/BirdFlockMap.png',
-                    'js/app/images/TornadoMap.png'];
+                    'js/app/images/TornadoMap.png',
+                    'js/app/images/storm.png'];
 
 /**
  * Game logic
@@ -235,6 +246,18 @@ var Tornado = Actor.extend({
     active: true,
     src: new SpriteMap('js/app/images/TornadoMap.png',
     {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20, useTimer: false}),
+    init: function(x, y, sizeX, sizeY) {
+        this._super.call(this, x, y, sizeX, sizeY);
+    }
+});
+
+/**
+ * Storm
+ */
+var Storm = Actor.extend({
+    active: true,
+    src: new SpriteMap('js/app/images/storm.png',
+        {stand:[0, 0, 3, 0]}, {frameW: 256, frameH: 256, interval: 40, useTimer: false}),
     init: function(x, y, sizeX, sizeY) {
         this._super.call(this, x, y, sizeX, sizeY);
     }
@@ -301,7 +324,7 @@ var Plane = Player.extend({
                     game.createBirdShit($(window).height(),$(window).width());
                 }
                 if(! ui.hasVisionPromptDisplayed){
-                    ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
+                    ui.displayPrompt("Shake the birds off", "hand-o-up", "shake");
                     ui.hasVisionPromptDisplayed = true;
                 }
 
@@ -334,6 +357,20 @@ var Plane = Player.extend({
             ui.hidePrompt();
             this.draggedByTornado = false;
         }
+    },
+    withinThunderstorm: function(bInThunderstorm) {
+        if(bInThunderstorm) {
+            activeThunderstorm = true;
+            console.log("IN THUNDERSTORM!!!!");
+            activeThunderstormCounter=20;
+            // Ask player to do something to get rid of the storm
+            // ...
+        }
+        else {
+            activeThunderstormCounter=0;
+            activeThunderstorm = false;
+            console.log("OUT OF THUNDERSTORM!!!!");
+        }
     }
 });
 
@@ -355,9 +392,27 @@ function move(direction, turn_angle) {
     //console.log(player.orientation);
 }
 
+function startNewLevel(level) {
+    allowLeapStart = false;
+    setup(false);
+    console.log("finished set up for level " + level);
+    App.isGameOver = false;
+    startAnimating();
+}
+function displayHighscore(data, textStatus, jqXHR) {
+    console.log(data);
+    $.get("http://highscoreserver.herokuapp.com/api/entries", function (data) {
+        data.forEach(function(entry){
+            console.log(entry.name);
+            console.log(entry.score);
+        })
+    });
+}
 reachDist = function(level) {
     console.log("reach level " + level);
-
+    if(level > 0){
+        score += currentLevel * player.fuel.round();
+    }
     App.isGameOver = true;
     stopAnimating();
     gameBgMusic.pause();
@@ -368,16 +423,30 @@ reachDist = function(level) {
     }
 
     var text = "Level " + level + " completed!";
-
+    var text2 = "Current score: " + score;
+    console.log(text);
     if(level == 0) {
         text = "Failed!"; // What is this for?
     }
     else if(level == -1) {
-        text = "You ran out of fuel!";
-        level = 0;
-
         // Play 'level failed' sound
         sndGameLevelFailed.play();
+        text = "You ran out of fuel!";
+        text2 = "Final score: " + score;
+        level = 0;
+        var person = prompt("Please enter your name", "ZZZ");
+        var a = {name: person,score:score};
+        if (person != null) {
+            $.ajax({
+                type: "POST",
+                url: "http://highscoreserver.herokuapp.com/api/entries",
+                data: a,
+                success: displayHighscore,
+                dataType: 'json'
+            });
+        }
+
+
     }
     else {
         // Made it to next level
@@ -385,14 +454,14 @@ reachDist = function(level) {
         sndGameLevelComplete.play();
     }
 
-    advanceToLevel(level + 1);
+    changeLevel(level + 1);
 
     // This runs during update() before the final draw(), so we have to delay it.
     setTimeout(function() {
         context.save();
-        context.font = '100px Arial';
+        context.font = '80px Arial';
         context.fillStyle = 'black';
-        context.strokeStyle = 'lightGray';
+        context.strokeStyle = 'white';
         context.textBaseline = 'middle';
         context.textAlign = 'center';
         context.shadowColor = 'black';
@@ -400,19 +469,19 @@ reachDist = function(level) {
         context.lineWidth = 5;
         var x = Math.round(world.xOffset+canvas.width/2);
         var y = Math.round(world.yOffset+canvas.height/2);
-        context.strokeText(text, x, y);
-        context.fillText(text, x, y);
+        context.strokeText(text, x, y-100);
+        context.strokeText(text2, x, y+100);
+        context.fillText(text, x, y-100);
+        context.fillText(text2, x, y+100);
         context.restore();
     }, 100);
     $canvas.css('cursor', 'pointer');
+    allowLeapStart = true;
     $canvas.one('click.gameover', function(e) {
         e.preventDefault();
         $canvas.css('cursor', 'auto');
         //App.reset();
-        setup(false);
-        console.log("finished set up for level " + level);
-        App.isGameOver = false;
-        startAnimating();
+        startNewLevel(level);
     });
 };
 
@@ -420,7 +489,8 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision, keysCustom.escape).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff,
+    keysCustom.vision, keysCustom.escape, keysCustom.balance).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -434,6 +504,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
         player.toggleVision(true);
     }else if(e.keyPressed == keysCustom.escape[1]){
         player.loseControl(false);
+    }else if(e.keyPressed == keysCustom.balance[1]){
+        player.withinThunderstorm(false);
     }
 });
 
@@ -443,7 +515,7 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
 function update() {
 
     if(!App.isGameOver && takeoff){
-        player.fuel -= 0.05;
+        player.fuel -= 0.025 + 0.025 * currentLevel;
 
         if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
             PLANE_MOVE_SPEED += 2;
@@ -466,13 +538,31 @@ function update() {
             }
         });
 
-        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
-            player.loseControl(true);
-            console.log("Player lost control!");
-        }
-        else if(player.draggedByTornado && !tornado.collides(player)) {
-            player.loseControl(false);
-            console.log("Player regained control!");
+        tornados.forEach(function(tornado) {
+            if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
+                player.loseControl(true);
+                console.log("Player lost control!");
+            }
+            else if(player.draggedByTornado && !tornado.collides(player)) {
+                player.loseControl(false);
+                console.log("Player regained control!");
+            }
+        });
+
+        var inSomeThunderstorm = false;
+        storms.forEach(function(storm) {
+            if(storm.active && storm.collides(player) && !activeThunderstorm) {
+                storm.active = false;
+                player.withinThunderstorm(true);
+                console.log("Within thunderstorm!");
+            }
+            if(storm.collides(player)) {
+                inSomeThunderstorm = true;
+            }
+        });
+
+        if(activeThunderstorm && !inSomeThunderstorm) {
+            player.withinThunderstorm(false);
         }
 
         //console.log("fuel:" + player.fuel);
@@ -495,7 +585,7 @@ function update() {
     }
 }
 
-function advanceToLevel(level){
+function changeLevel(level){
     currentLevel = level;
     var $level = jQuery('#level .level').text(level);
 }
@@ -519,14 +609,20 @@ function draw() {
   //endPointReal.draw();
 
 	player.draw();
-    if(showDir){
+    if(takeoff && showDir){
         dirSignal.draw();
     }
     birdFlocks.forEach(function(bird){
         bird.draw();
     });
 
-    tornado.draw();
+    tornados.forEach(function(tornado){
+        tornado.draw();
+    });
+
+    storms.forEach(function(storm){
+        storm.draw();
+    });
 
     dragOverlay.context.clear();
     if(game.birdShit())
@@ -599,17 +695,14 @@ function setup(first) {
   // Change the size of the playable area. Do this before placing items!
   if(first) {
         //Level related
-      advanceToLevel(1);
+      changeLevel(1);
+      score = 0;
+      dragOverlay = new Layer({relative: 'canvas'});
+      dragOverlay.positionOverCanvas();
   }
     world.resize(1024 * mapWidth, 1024 * mapHeight);
     takeoff = false;
     PLANE_MOVE_SPEED = 0;
-
-    $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
-        console.log(data[0].name);
-        console.log(data[0].score);
-    });
-
 
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
@@ -640,8 +733,30 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
+    tornados = new Collection();
+
   // Create a tornado
-  tornado = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado1 = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado2;
+
+  tornados.add(tornado1);
+    
+    if(currentLevel == 2){
+        tornado2= new Tornado(startPoint.xC() + 500, startPoint.yC() -500, 512, 512);
+        tornados.add(tornado2);
+    }
+
+
+  // Create storms
+  var storm1 = new Storm(world.width - 1200, 1200, 256, 256);
+  var storm2 = new Storm(world.width - 1600, 1800, 256, 256);
+  var storm3 = new Storm(world.width - 2000, 1000, 256, 256);
+  var storm4 = new Storm(world.width - 1000, 2200, 256, 256);
+  storms = new Collection();
+  storms.add(storm1);
+  storms.add(storm2);
+  storms.add(storm3);
+  storms.add(storm4);
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -658,12 +773,11 @@ function setup(first) {
   useTimer: false});
 
   fuelTank = new FuelTank(0, 56, 130, 400);
-  dragOverlay = new Layer({relative: 'canvas'});
-  dragOverlay.positionOverCanvas();
+
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
-  console.log(player.getVelocityVector());
+  //console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
@@ -710,7 +824,7 @@ function setup(first) {
  *   The CSS color of the border of the progress bar.
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
-    console.log("drawProgressBar left: " + pct);
+    //console.log("drawProgressBar left: " + pct);
     pct = 1 - pct;
     ctx.lineWidth = 1;
     ctx.fillStyle = doneColor;
@@ -724,7 +838,7 @@ function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, border
 var FuelTank = Box.extend({
     progressBarColor: 'green',
     drawDefault: function(ctx, x, y, w, h) {
-        console.log("fuel left: " + player.fuel/MAX_FUEL);
+        //console.log("fuel left: " + player.fuel/MAX_FUEL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
             this.progressBarColor, 'black', this.progressBarBorderColor);
     }
