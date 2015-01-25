@@ -68,7 +68,7 @@ Leap.loop({enableGestures: true}, function(frame) {
             //if (screenPosition[1]>0)
 
             zoom=-hand.screenPosition()[1];
-            if (zoom>300)// || zoom<-200)
+            if (zoom>200)// || zoom<-200)
                 if (!takeoff )
                     takeOffPlane();
             //leapZoom(zoom);
