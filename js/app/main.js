@@ -109,6 +109,7 @@ Leap.loop({enableGestures: true}, function(frame) {
                     break;
                 case "swipe":
                     console.log("Swipe Gesture");
+                    if (allowLeapStart) startNewLevel(1);
                     if (App.physicsTimeElapsed-lastSwipeTime>1000){
                         lastSwipe=0;
                         lastSwipeTime=App.physicsTimeElapsed;
