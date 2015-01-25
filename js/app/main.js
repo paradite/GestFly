@@ -43,7 +43,7 @@ Leap.loop({enableGestures: true}, function(frame) {
         rotationalAngle = -hand.roll();
         MAX_ROTATIONAL_ANGLE=1.2;
         MIN_ROTATIONAL_ANGLE=0.1;
-        ROLL_FACTOR=0.15;
+        ROLL_FACTOR=0.125;
 
         if (!inProcess && frame.gestures.length == 0){
             if (rotationalAngle>0) {//right
@@ -67,9 +67,11 @@ Leap.loop({enableGestures: true}, function(frame) {
 
             //if (screenPosition[1]>0)
 
-//            zoom=-hand.screenPosition()[1];
-//            if (zoom>300 || zoom<-200)
-//            leapZoom(zoom);
+            zoom=-hand.screenPosition()[1];
+            if (zoom>300)// || zoom<-200)
+                if (!takeoff )
+                    takeOffPlane();
+            //leapZoom(zoom);
             //console.log(zoom);
             
         }
@@ -345,9 +347,6 @@ var Plane = Player.extend({
 
             this.draggedByTornado = true;
 
-            // Deactivate the tornado, prevent getting stuck in again
-            tornado.active = false;
-
             // Slow down the plane's speed
             PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
 
@@ -540,16 +539,24 @@ function update() {
             }
         });
 
+        var inSomeTornado = false;
         tornados.forEach(function(tornado) {
             if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
                 player.loseControl(true);
                 console.log("Player lost control!");
+
+                // Deactivate the tornado, prevent getting stuck in again
+                tornado.active = false;
             }
-            else if(player.draggedByTornado && !tornado.collides(player)) {
-                player.loseControl(false);
-                console.log("Player regained control!");
+            if(player.draggedByTornado && tornado.collides(player)) {
+                inSomeTornado = true;
             }
         });
+
+        if(player.draggedByTornado && !inSomeTornado) {
+            player.loseControl(false);
+            console.log("Player regained control!");
+        }
 
         var inSomeThunderstorm = false;
         storms.forEach(function(storm) {
