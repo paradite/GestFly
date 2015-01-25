@@ -271,16 +271,20 @@ var Plane = Player.extend({
     toggleVision: function(allow_vision) {
         if(allow_vision){
             this.vision = true;
-            $("#blockage").hide();
+            game.destroyBirdShit();
             ui.hidePrompt();
         }else{
             if(this.vision == true){
                 this.vision = false;
-                $("#blockage").show();
-                if(! ui.hasVisionPromptDisplayed) {
+                if(!game.birdShit()) {
+                    var canvas = background.canvas;
+                    game.createBirdShit($(window).height(),$(window).width());
+                }
+                if(! ui.hasVisionPromptDisplayed){
                     ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
                     ui.hasVisionPromptDisplayed = true;
                 }
+
             }
         }
     },
@@ -501,6 +505,8 @@ function draw() {
     tornado.draw();
 
     dragOverlay.context.clear();
+    if(game.birdShit())
+        game.birdShit().draw(dragOverlay.context);
     fuelTank.draw();
 }
 
@@ -610,8 +616,10 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
-  // Create a tornado
-  tornado = new Tornado(2196, world.height-1792, 512, 512);
+  tornado = new Actor(2196, world.height-1792, 512, 512);
+  tornado.src = new SpriteMap('js/app/images/TornadoMap.png',
+  {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20,
+  useTimer: false});
 
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
@@ -627,7 +635,7 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
-  fuelTank = new FuelTank(0, 56, 130, 400);
+  fuelTank = new FuelTank(0, 0, 400, 100);
   dragOverlay = new Layer({relative: 'canvas'});
   dragOverlay.positionOverCanvas();
   // Set velocity vector for player
@@ -635,7 +643,7 @@ function setup(first) {
 
   console.log(player.getVelocityVector());
 
-    // Enable zooming, and display the zoom level indicator
+// Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
     aTimer.start();
 
@@ -681,12 +689,11 @@ function setup(first) {
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
     console.log("drawProgressBar left: " + pct);
-    pct = 1 - pct;
     ctx.lineWidth = 1;
     ctx.fillStyle = doneColor;
-    ctx.fillRect(x, y+h*pct, w, h*(1-pct));
+    ctx.fillRect(x, y, w*pct, h);
     ctx.fillStyle = remainingColor || 'transparent';
-    ctx.fillRect(x, y, w, h*pct);
+    ctx.fillRect(x+w*pct, y, w, h*(1-pct));
     ctx.strokeStyle = borderColor || 'black';
     ctx.strokeRect(x, y, w, h);
 }
@@ -696,6 +703,6 @@ var FuelTank = Box.extend({
     drawDefault: function(ctx, x, y, w, h) {
         console.log("fuel left: " + player.fuel/MAX_FUEL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
-            this.progressBarColor, 'black', this.progressBarBorderColor);
+            this.progressBarColor, 'transparent', this.progressBarBorderColor);
     }
 });
