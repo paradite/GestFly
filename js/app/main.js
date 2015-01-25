@@ -360,6 +360,7 @@ var Plane = Player.extend({
     },
     withinThunderstorm: function(bInThunderstorm) {
         if(bInThunderstorm) {
+            ui.displayPrompt("Keep your hand steady in the thunderstrom","hand-o-up","circle");
             activeThunderstorm = true;
             console.log("IN THUNDERSTORM!!!!");
             activeThunderstormCounter=20;
@@ -367,6 +368,7 @@ var Plane = Player.extend({
             // ...
         }
         else {
+            ui.hidePrompt();
             activeThunderstormCounter=0;
             activeThunderstorm = false;
             console.log("OUT OF THUNDERSTORM!!!!");
@@ -740,7 +742,7 @@ function setup(first) {
   var tornado2;
 
   tornados.add(tornado1);
-    
+
     if(currentLevel == 2){
         tornado2= new Tornado(startPoint.xC() + 500, startPoint.yC() -500, 512, 512);
         tornados.add(tornado2);
