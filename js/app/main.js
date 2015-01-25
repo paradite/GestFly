@@ -220,6 +220,7 @@ var Plane = Player.extend({
     orientation: 0,
     fuel: 200,
     vision: true,
+    draggedByTornado: false,
     init: function(team, x, y) {
         this._super.call(this, x, y);
         this.team = team;
@@ -270,6 +271,19 @@ var Plane = Player.extend({
         // angle in radians
         var angleRadians = Math.atan2(yDist, xDist);
         return angleRadians;
+    },
+    loseControl: function(bLostControl) {
+        if(bLostControl) {
+            this.draggedByTornado = true;
+
+            // Slow down the plane's speed
+            PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
+
+            // Ask player to do something to get rid of the tornado
+        }
+        else {
+            this.draggedByTornado = false;
+        }
     }
 });
 
@@ -378,12 +392,19 @@ function update() {
 
     if(!App.isGameOver && takeoff){
         player.fuel -= 0.05;
+
+        if(!player.draggedByTornado && PLANE_MOVE_SPEED != DEFAULT_SPEED) {
+            PLANE_MOVE_SPEED += 50;
+        }
+
         //Offset for the default orientation towards the right
         player.setVelocityVector(Math.PI * (player.orientation), PLANE_MOVE_SPEED);
         player.update();
+
         if(player.fuel < 0){
             reachDist(-1);
         }
+
         birdFlocks.forEach(function(bird){
             bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
             bird.update();
@@ -391,11 +412,23 @@ function update() {
                 player.toggleVision(false);
             }
         });
-        console.log("fuel:" + player.fuel);
-        console.log(player.x + " " + player.y);
+
+        if(!player.draggedByTornado && tornado.collides(player)) {
+            player.loseControl(true);
+            console.log("Player lost control!");
+        }
+        else if(player.draggedByTornado && !tornado.collides(player)) {
+            player.loseControl(false);
+            console.log("Player regained control!");
+        }
+
+        //console.log("fuel:" + player.fuel);
+        //console.log(player.x + " " + player.y);
+
         if(player.collides(endPointReal)){
             reachDist(currentLevel);
         }
+
         var dir = player.directionToDest();
         dirSignal.x = player.x-144;
         dirSignal.y = player.y-144;
@@ -407,7 +440,6 @@ function update() {
             showDir = false;
         }
     }
-
 }
 
 function advanceToLevel(level){
