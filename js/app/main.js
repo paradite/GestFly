@@ -55,8 +55,8 @@ Leap.loop({enableGestures: true}, function(frame) {
                 else if (rotationalAngle<-MIN_ROTATIONAL_ANGLE)
                     move(DIRECTION_LEFT, ANGLE_FACTOR*rotationalAngle*rotationalAngle*ROLL_FACTOR);
 
-            if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>20) PLANE_MOVE_SPEED-=1.1*hand.pitch(); //lift the tip of the hand to slow down
-            else if (hand.pitch()<-0.2) PLANE_MOVE_SPEED-=1.1*hand.pitch();
+            //if (hand.pitch()>0.2 && PLANE_MOVE_SPEED>1*hand.pitch()) PLANE_MOVE_SPEED-=1*hand.pitch(); //lift the tip of the hand to slow down
+            //else if (hand.pitch()<-0.2 && PLANE_MOVE_SPEED<DEFAULT_SPEED) PLANE_MOVE_SPEED-=1.1*hand.pitch();
 
             //if (screenPosition[1]>0)
 
@@ -75,7 +75,7 @@ Leap.loop({enableGestures: true}, function(frame) {
             switch (gesture.type){
                 case "circle":
                     console.log("Circle Gesture");
-                    var circleProgress = gesture.progress;
+                    /*var circleProgress = gesture.progress;
                     //var completeCircles = Math.floor(circleProgress);
                     console.log(circleProgress);
                     //tmp=PLANE_MOVE_SPEED;
@@ -90,7 +90,8 @@ Leap.loop({enableGestures: true}, function(frame) {
                             move(DIRECTION_RIGHT, ANGLE_FACTOR/160);
                         else move(DIRECTION_LEFT, ANGLE_FACTOR/160);
                         //update();
-                    }
+                    }*/
+                    player.loseControl(false)
                     inProcess=false;
                     //PLANE_MOVE_SPEED=tmp;
                     break;
