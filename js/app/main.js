@@ -172,7 +172,7 @@ var startPoint, endPoint;
 var endPointReal;
 
 var birdFlocks;
-var tornado;
+var tornados;
 var storms;
 var activeThunderstorm = false;
 var activeThunderstormCounter=0;
@@ -347,9 +347,6 @@ var Plane = Player.extend({
 
             this.draggedByTornado = true;
 
-            // Deactivate the tornado, prevent getting stuck in again
-            tornado.active = false;
-
             // Slow down the plane's speed
             PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
 
@@ -401,6 +398,15 @@ function startNewLevel(level) {
     App.isGameOver = false;
     startAnimating();
 }
+function displayHighscore(data, textStatus, jqXHR) {
+    console.log(data);
+    $.get("http://highscoreserver.herokuapp.com/api/entries", function (data) {
+        data.forEach(function(entry){
+            console.log(entry.name);
+            console.log(entry.score);
+        })
+    });
+}
 reachDist = function(level) {
     console.log("reach level " + level);
     if(level > 0){
@@ -422,11 +428,24 @@ reachDist = function(level) {
         text = "Failed!"; // What is this for?
     }
     else if(level == -1) {
-        text = "You ran out of fuel!";
-        level = 0;
-
         // Play 'level failed' sound
         sndGameLevelFailed.play();
+        text = "You ran out of fuel!";
+        text2 = "Final score: " + score;
+        level = 0;
+        var person = prompt("Please enter your name", "ZZZ");
+        var a = {name: person,score:score};
+        if (person != null) {
+            $.ajax({
+                type: "POST",
+                url: "http://highscoreserver.herokuapp.com/api/entries",
+                data: a,
+                success: displayHighscore,
+                dataType: 'json'
+            });
+        }
+
+
     }
     else {
         // Made it to next level
@@ -518,11 +537,21 @@ function update() {
             }
         });
 
-        if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
-            player.loseControl(true);
-            console.log("Player lost control!");
-        }
-        else if(player.draggedByTornado && !tornado.collides(player)) {
+        var inSomeTornado = false;
+        tornados.forEach(function(tornado) {
+            if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
+                player.loseControl(true);
+                console.log("Player lost control!");
+
+                // Deactivate the tornado, prevent getting stuck in again
+                tornado.active = false;
+            }
+            if(player.draggedByTornado && tornado.collides(player)) {
+                inSomeTornado = true;
+            }
+        });
+
+        if(player.draggedByTornado && !inSomeTornado) {
             player.loseControl(false);
             console.log("Player regained control!");
         }
@@ -594,7 +623,10 @@ function draw() {
         bird.draw();
     });
 
-    tornado.draw();
+    tornados.forEach(function(tornado){
+        tornado.draw();
+    });
+
     storms.forEach(function(storm){
         storm.draw();
     });
@@ -679,12 +711,6 @@ function setup(first) {
     takeoff = false;
     PLANE_MOVE_SPEED = 0;
 
-    $.get("http://highscoreserver.herokuapp.com/api/entries", function(data){
-        console.log(data[0].name);
-        console.log(data[0].score);
-    });
-
-
   // Switch from side view to top-down.
   Actor.prototype.GRAVITY = false;
 
@@ -714,8 +740,19 @@ function setup(first) {
   birdFlocks.add(birdFlock2);
   birdFlocks.add(birdFlock3);
 
+    tornados = new Collection();
+
   // Create a tornado
-  tornado = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado1 = new Tornado(2196, world.height-1792, 512, 512);
+  var tornado2;
+
+  tornados.add(tornado1);
+    
+    if(currentLevel == 2){
+        tornado2= new Tornado(startPoint.xC() + 500, startPoint.yC() -500, 512, 512);
+        tornados.add(tornado2);
+    }
+
 
   // Create storms
   var storm1 = new Storm(world.width - 1200, 1200, 256, 256);
