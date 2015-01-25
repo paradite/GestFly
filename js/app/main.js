@@ -12,14 +12,14 @@ var currentLevel = 1,
     numScrollEvents=0,
     aTimer = new Timer(),
     swipeCount = 0,
-    MAX_FEUL = 200;
+    MAX_FUEL = 200;
 
 var player,
     showDir = true,
     dirSignal,
     inProcess=false,
     takeoff = false,
-    feulTank,
+    fuelTank,
     dragOverlay;
 
 // Controls
@@ -228,7 +228,7 @@ var Plane = Player.extend({
         this.team = team;
         this.lastShot = App.physicsTimeElapsed;
         this.orientation = 0;
-        this.fuel = MAX_FEUL;
+        this.fuel = MAX_FUEL;
         //if (team != myTeam) return; // Only allow selecting the player's team
         var t = this;
         // Allow selecting soldiers by clicking on them
@@ -447,7 +447,7 @@ function draw() {
     tornado.draw();
 
     dragOverlay.context.clear();
-    feulTank.draw();
+    fuelTank.draw();
 }
 
 function takeOffPlane() {
@@ -575,7 +575,7 @@ function setup(first) {
   {stand:[0, 0, 0, 9]}, {frameW: 400, frameH: 400, interval: 20,
   useTimer: false});
 
-  feulTank = new FeulTank(0, 0, 400, 100);
+  fuelTank = new FuelTank(0, 0, 400, 100);
   dragOverlay = new Layer({relative: 'canvas'});
   dragOverlay.positionOverCanvas();
   // Set velocity vector for player
@@ -633,16 +633,16 @@ function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, border
     ctx.fillStyle = doneColor;
     ctx.fillRect(x, y, w*pct, h);
     ctx.fillStyle = remainingColor || 'transparent';
-    ctx.fillRect(x+w*pct, y, w*(1-pct), h);
+    ctx.fillRect(x+w*pct, y, w, h*(1-pct));
     ctx.strokeStyle = borderColor || 'black';
     ctx.strokeRect(x, y, w, h);
 }
 
-var FeulTank = Box.extend({
+var FuelTank = Box.extend({
     progressBarColor: 'green',
     drawDefault: function(ctx, x, y, w, h) {
-        console.log("feul left: " + player.fuel/MAX_FEUL);
-        drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FEUL,
+        console.log("fuel left: " + player.fuel/MAX_FUEL);
+        drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
             this.progressBarColor, 'transparent', this.progressBarBorderColor);
     }
 });
