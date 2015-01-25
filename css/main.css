@@ -52,6 +52,36 @@ canvas {
   border-radius: 10px;
 }
 
+#highScore {
+  left: 33%;
+  top: 5%;
+  width: 40%;
+  text-align: center;
+  padding: 10px 5px;
+  border-radius: 5px;
+  display: none;
+  background-color: rgba(0,0,0,0.8);
+}
+
+#highScore ul {
+  margin: 0;
+  text-align: left;
+}
+
+#highScore li {
+  font-family: "Helvetica Neue Light", "Lucida Grande", "Calibri", "Arial", sans-serif;
+  list-style: none;
+  font-size: 1.5em;
+}
+
+#highScore li span {
+  display: inline-block;
+}
+
+.leftLabel{
+  width: 70%;
+}
+
 #prompt i {
   margin-right: 20px;
 }
