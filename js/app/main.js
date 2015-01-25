@@ -358,7 +358,9 @@ function move(direction, turn_angle) {
 
 reachDist = function(level) {
     console.log("reach level " + level);
-
+    if(level > 0){
+        score += currentLevel * player.fuel.round();
+    }
     App.isGameOver = true;
     stopAnimating();
     gameBgMusic.pause();
@@ -367,9 +369,7 @@ reachDist = function(level) {
     if (player) {
         player.destroy();
     }
-    if(level > 0){
-        score += currentLevel * player.fuel.round();
-    }
+
     var text = "Level " + level + " completed!";
     var text2 = "Current score: " + score;
     console.log(text);
