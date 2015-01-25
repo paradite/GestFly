@@ -32,7 +32,8 @@ var keysCustom = {
   right: ['right', 'd'],
   takeoff: ['takeoff', 't'],
   vision: ['vision', 'v'],
-  escape: ['escape', 'e']
+  escape: ['escape', 'e'],
+  balance: ['balance', 'b']
 };
 
 Leap.loop({enableGestures: true}, function(frame) {
@@ -163,6 +164,8 @@ var endPointReal;
 
 var birdFlocks;
 var tornado;
+var storms;
+var activeThunderstorm = false;
 
 var gameBgMusic;
 var sndGameLevelComplete, sndGameLevelFailed;
@@ -174,7 +177,8 @@ var preloadables = ['js/app/images/skyTile.png',
                     'js/app/images/endPoint.png',
                     'js/app/images/planeArrowMap.png',
                     'js/app/images/BirdFlockMap.png',
-                    'js/app/images/TornadoMap.png'];
+                    'js/app/images/TornadoMap.png',
+                    'js/app/images/storm.png'];
 
 /**
  * Game logic
@@ -234,6 +238,18 @@ var Tornado = Actor.extend({
     active: true,
     src: new SpriteMap('js/app/images/TornadoMap.png',
     {stand:[0, 0, 0, 10]}, {frameW: 512, frameH: 512, interval: 20, useTimer: false}),
+    init: function(x, y, sizeX, sizeY) {
+        this._super.call(this, x, y, sizeX, sizeY);
+    }
+});
+
+/**
+ * Storm
+ */
+var Storm = Actor.extend({
+    active: true,
+    src: new SpriteMap('js/app/images/storm.png',
+        {stand:[0, 0, 3, 0]}, {frameW: 256, frameH: 256, interval: 40, useTimer: false}),
     init: function(x, y, sizeX, sizeY) {
         this._super.call(this, x, y, sizeX, sizeY);
     }
@@ -300,7 +316,7 @@ var Plane = Player.extend({
                     game.createBirdShit($(window).height(),$(window).width());
                 }
                 if(! ui.hasVisionPromptDisplayed){
-                    ui.displayPrompt("Shake the birds off", "hand-o-up", "shake")
+                    ui.displayPrompt("Shake the birds off", "hand-o-up", "shake");
                     ui.hasVisionPromptDisplayed = true;
                 }
 
@@ -329,6 +345,18 @@ var Plane = Player.extend({
         }
         else {
             this.draggedByTornado = false;
+        }
+    },
+    withinThunderstorm: function(bInThunderstorm) {
+        if(bInThunderstorm) {
+            activeThunderstorm = true;
+            console.log("IN THUNDERSTORM!!!!");
+
+            // Ask player to do something to get rid of the storm
+            // ...
+        }
+        else {
+            activeThunderstorm = false;
         }
     }
 });
@@ -416,7 +444,8 @@ reachDist = function(level) {
  * KEYBOARD
  * Record the last key pressed so the player moves in the correct direction.
  */
-jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff, keysCustom.vision, keysCustom.escape).join(' '), function(e) {
+jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, keysCustom.right, keysCustom.takeoff,
+    keysCustom.vision, keysCustom.escape, keysCustom.balance).join(' '), function(e) {
 
     if(e.keyPressed == keysCustom.right[1]){
         move(DIRECTION_RIGHT, ANGLE_FACTOR);
@@ -430,6 +459,8 @@ jQuery(document).keydown(keysCustom.up.concat(keysCustom.down, keysCustom.left, 
         player.toggleVision(true);
     }else if(e.keyPressed == keysCustom.escape[1]){
         player.loseControl(false);
+    }else if(e.keyPressed == keysCustom.balance[1]){
+        player.withinThunderstorm(false);
     }
 });
 
@@ -470,6 +501,14 @@ function update() {
             player.loseControl(false);
             console.log("Player regained control!");
         }
+
+        storms.forEach(function(storm) {
+            if(storm.active && storm.collides(player) && !activeThunderstorm) {
+                storm.active = false;
+                player.withinThunderstorm(true);
+                console.log("Within thunderstorm!");
+            }
+        });
 
         //console.log("fuel:" + player.fuel);
         //console.log(player.x + " " + player.y);
@@ -523,6 +562,9 @@ function draw() {
     });
 
     tornado.draw();
+    storms.forEach(function(storm){
+        storm.draw();
+    });
 
     dragOverlay.context.clear();
     if(game.birdShit())
@@ -639,6 +681,13 @@ function setup(first) {
   // Create a tornado
   tornado = new Tornado(2196, world.height-1792, 512, 512);
 
+  // Create storms
+  var storm1 = new Storm(world.width - 1200, 1200, 256, 256);
+  var storm2 = new Storm(world.width - 1600, 1800, 256, 256);
+  storms = new Collection();
+  storms.add(storm1);
+  storms.add(storm2);
+
   // Initialize the player.
   player = new Plane(null, startPoint.xC() - 200, startPoint.yC() + 30);
   player.src = new SpriteMap('js/app/images/Aeroplane.png',
@@ -659,7 +708,7 @@ function setup(first) {
   // Set velocity vector for player
   player.setVelocityVector(Math.PI * player.orientation, PLANE_MOVE_SPEED);
 
-  console.log(player.getVelocityVector());
+  //console.log(player.getVelocityVector());
 
 // Enable zooming, and display the zoom level indicator
     Mouse.Zoom.enable(showZoomLevel);
@@ -706,7 +755,7 @@ function setup(first) {
  *   The CSS color of the border of the progress bar.
  */
 function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, borderColor) {
-    console.log("drawProgressBar left: " + pct);
+    //console.log("drawProgressBar left: " + pct);
     pct = 1 - pct;
     ctx.lineWidth = 1;
     ctx.fillStyle = doneColor;
@@ -720,7 +769,7 @@ function drawProgressBar(ctx, x, y, w, h, pct, doneColor, remainingColor, border
 var FuelTank = Box.extend({
     progressBarColor: 'green',
     drawDefault: function(ctx, x, y, w, h) {
-        console.log("fuel left: " + player.fuel/MAX_FUEL);
+        //console.log("fuel left: " + player.fuel/MAX_FUEL);
         drawProgressBar(dragOverlay.context, x, y, w, h, player.fuel/MAX_FUEL,
             this.progressBarColor, 'black', this.progressBarBorderColor);
     }
