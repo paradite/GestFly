@@ -345,9 +345,6 @@ var Plane = Player.extend({
 
             this.draggedByTornado = true;
 
-            // Deactivate the tornado, prevent getting stuck in again
-            tornado.active = false;
-
             // Slow down the plane's speed
             PLANE_MOVE_SPEED = DEFAULT_SPEED / 10;
 
@@ -538,16 +535,24 @@ function update() {
             }
         });
 
+        var inSomeTornado = false;
         tornados.forEach(function(tornado) {
             if(!player.draggedByTornado && tornado.active && tornado.collides(player)) {
                 player.loseControl(true);
                 console.log("Player lost control!");
+
+                // Deactivate the tornado, prevent getting stuck in again
+                tornado.active = false;
             }
-            else if(player.draggedByTornado && !tornado.collides(player)) {
-                player.loseControl(false);
-                console.log("Player regained control!");
+            if(player.draggedByTornado && tornado.collides(player)) {
+                inSomeTornado = true;
             }
         });
+
+        if(player.draggedByTornado && !inSomeTornado) {
+            player.loseControl(false);
+            console.log("Player regained control!");
+        }
 
         var inSomeThunderstorm = false;
         storms.forEach(function(storm) {
