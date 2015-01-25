@@ -211,6 +211,7 @@ var Bird = Actor.extend({
     BIRD_MOVE_SPEED: 0,
     CONTINUOUS_MOVEMENT: true,
     orientation: 0,
+    valid: true,
     src: new SpriteMap('js/app/images/BirdFlockMap.png',
         {stand:[0, 0, 0, 9]}, {frameW: 512, frameH: 512, interval: 40,
             useTimer: false}),
@@ -222,6 +223,7 @@ var Bird = Actor.extend({
         this.updateOrientaion(orientaion);
         this.BIRD_MOVE_SPEED = speed;
         this._super.call(this, x, y, sizex, sizey);
+        this.valid = true;
     }
 });
 
@@ -454,8 +456,9 @@ function update() {
         birdFlocks.forEach(function(bird){
             bird.setVelocityVector(Math.PI * (bird.orientation), bird.BIRD_MOVE_SPEED);
             bird.update();
-            if(bird.collides(player)){
+            if(bird.valid && bird.collides(player)){
                 player.toggleVision(false);
+                bird.valid = false;
             }
         });
 
